@@ -55,8 +55,8 @@ public class GreetService implements Serializable {
     //método GetDataMsC que devuelve una lista de ndData a partir del JSON que recive de la API
     public List<Products> GetProductOrder() throws Exception {
         Gson gson = new Gson();
-        List<Products> ndData = gson.fromJson(api.getProductOrder(), new TypeToken<List<ndData>>() {}.getType());
+        List<Products> products = gson.fromJson(api.getProductOrder(), new TypeToken<List<Products>>() {}.getType());
 
-        return ndData;
+        return products;
     }
 }
