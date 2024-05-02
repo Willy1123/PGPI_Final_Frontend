@@ -3,6 +3,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.vaadin.pro.licensechecker.Product;
+import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.net.URL;
@@ -11,6 +12,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.UUID;
 
+@Component
 public class Api {
     private static final String URL = "http://localhost:8081/";
 
@@ -133,7 +135,7 @@ public class Api {
 
     public String getProductOrder() throws Exception {
         // Se crea la URL de la API
-        String urlCompleta = URL + "Products/IdCode";
+        String urlCompleta = URL + "Products/Name";
         java.net.URL url = new URL(urlCompleta);
         // Creamos un HTTPRequest con la URL
         HttpRequest request = HttpRequest.newBuilder().uri(new URI(urlCompleta)).GET().build();

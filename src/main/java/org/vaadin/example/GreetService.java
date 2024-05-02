@@ -5,11 +5,20 @@ import java.util.List;
 
 import com.nimbusds.jose.shaded.gson.Gson;
 import com.nimbusds.jose.shaded.gson.reflect.TypeToken;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class GreetService implements Serializable {
-    Api api = new Api();
+    //Api api = new Api();
+
+    private final Api api;
+
+    @Autowired
+    public GreetService(Api api) {
+        this.api = api;
+    }
+
     //método getndData que devuelve una lista de ndData a partir del JSON que recive de la API
     public  List<ndData> Getdata() throws Exception {
         Gson gson = new Gson();
