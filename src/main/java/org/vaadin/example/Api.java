@@ -2,6 +2,7 @@ package org.vaadin.example;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
+import com.vaadin.pro.licensechecker.Product;
 
 import java.net.URI;
 import java.net.URL;
@@ -25,6 +26,20 @@ public class Api {
         return response.body();
 
     }
+
+    public String getProducts() throws Exception {
+        // Se crea la URL de la API
+        String urlCompleta = URL + "Products";
+        java.net.URL url = new URL(urlCompleta);
+        // Creamos un HTTPRequest con la URL
+        HttpRequest request = HttpRequest.newBuilder().uri(new URI(urlCompleta)).GET().build();
+        // Recibimos la respuesta de la API y la convertimos a String
+        HttpResponse<String> response = HttpClient.newBuilder().build().send(request, HttpResponse.BodyHandlers.ofString());
+
+        return response.body();
+
+    }
+
     public String postndData(ndData ndData) throws Exception{
         // Se crea la URL de la API
         String urlCompleta = URL + "ndData";
@@ -34,6 +49,24 @@ public class Api {
         UUID id = UUID.randomUUID();
         ndData.setID(id.toString());
         String json = gson.toJson(ndData);
+
+        // Creamos un HTTPRequest con la URL y el JSON
+        HttpRequest request = HttpRequest.newBuilder().uri(new URI(urlCompleta)).POST(HttpRequest.BodyPublishers.ofString(json)).header("Content-Type", "application/json").build();
+        // Recibimos la respuesta de la API y la convertimos a String
+        HttpResponse<String> response = HttpClient.newBuilder().build().send(request, HttpResponse.BodyHandlers.ofString());
+
+        return response.body();
+    }
+
+    public String postProduct(Products product) throws Exception{
+        // Se crea la URL de la API
+        String urlCompleta = URL + "Products";
+
+        // Convertimos el objeto ndData a JSON
+        Gson gson = new Gson();
+        UUID id = UUID.randomUUID();
+        product.setId(0);
+        String json = gson.toJson(product);
 
         // Creamos un HTTPRequest con la URL y el JSON
         HttpRequest request = HttpRequest.newBuilder().uri(new URI(urlCompleta)).POST(HttpRequest.BodyPublishers.ofString(json)).header("Content-Type", "application/json").build();
@@ -64,9 +97,43 @@ public class Api {
         return response.body();
     }
 
+    public String editProduct(Products product) throws Exception {
+        // Se crea la URL de la API
+        String urlCompleta = URL + "Products/" + product.getId();
+
+        // Convertimos el objeto ndData a JSON
+        Gson gson = new Gson();
+        String json = gson.toJson(product);
+
+        // Creamos un HTTPRequest con la URL y el JSON
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(new URI(urlCompleta))
+                .PUT(HttpRequest.BodyPublishers.ofString(json))
+                .header("Content-Type", "application/json")
+                .build();
+
+        // Recibimos la respuesta de la API y la convertimos a String
+        HttpResponse<String> response = HttpClient.newBuilder().build().send(request, HttpResponse.BodyHandlers.ofString());
+
+        return response.body();
+    }
+
     public String getndDataMsC() throws Exception {
         // Se crea la URL de la API
         String urlCompleta = URL + "ndData/MsCode";
+        java.net.URL url = new URL(urlCompleta);
+        // Creamos un HTTPRequest con la URL
+        HttpRequest request = HttpRequest.newBuilder().uri(new URI(urlCompleta)).GET().build();
+        // Recibimos la respuesta de la API y la convertimos a String
+        HttpResponse<String> response = HttpClient.newBuilder().build().send(request, HttpResponse.BodyHandlers.ofString());
+
+        return response.body();
+
+    }
+
+    public String getProductOrder() throws Exception {
+        // Se crea la URL de la API
+        String urlCompleta = URL + "Products/IdCode";
         java.net.URL url = new URL(urlCompleta);
         // Creamos un HTTPRequest con la URL
         HttpRequest request = HttpRequest.newBuilder().uri(new URI(urlCompleta)).GET().build();

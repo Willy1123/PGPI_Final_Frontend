@@ -269,7 +269,6 @@ public class MainView extends VerticalLayout {
         return LayoutGrid;
     }
 
-
     public VerticalLayout GridMsC(GreetService service) throws Exception{
 
         VerticalLayout LGMsC = new VerticalLayout();
