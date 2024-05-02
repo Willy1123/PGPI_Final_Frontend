@@ -39,19 +39,20 @@ import java.util.stream.Collectors;
  * that shows a greeting message in a notification.
  */
 @Route
-@PageTitle("DIS Práctica 2")
+@PageTitle("Ethical Tech Nexus")
 public class MainView extends VerticalLayout {
 
-    /**
-     * Construct a new Vaadin view.
-     * <p>
-     * Build the initial UI state for the user accessing the application.
-     *
-     * @param service
-     *            The message service. Automatically injected Spring managed
-     *            bean.
-     */
-    public VerticalLayout botonañadir(GreetService service){
+    private VerticalLayout tab1Content = new VerticalLayout();
+    private HorizontalLayout tab1ContentH = new HorizontalLayout();
+    private VerticalLayout tab2Content = new VerticalLayout();
+    private VerticalLayout tab3Content = new VerticalLayout();
+    private HorizontalLayout tab3ContentH = new HorizontalLayout();
+    private Button btn_AddPoblation = new Button("New");
+    private Button btn_AddProduct = new Button("New");
+    private Button btn_ReloadPoblation = new Button("Reload");
+    private Button btn_ReloadProduct = new Button("Reload");
+
+    public VerticalLayout btnAddPoblation(GreetService service){
         VerticalLayout layoutarriba = new VerticalLayout();
 
         // Al pulsar el botón, aparece un formulario para rellenar los campos y otro botón para añadir los elementos escritos
@@ -107,7 +108,7 @@ public class MainView extends VerticalLayout {
         flagField2.isRequired();
 
         // Botón para guardar la información
-        Button save2 = new Button("Aceptar", e2 -> {
+        Button saveNewPoblation = new Button("Aceptar", e2 -> {
             ndData edicion = new ndData();
             edicion.setID(UUID.randomUUID().toString());
             edicion.setMsCode(msCodeField2.getValue());
@@ -127,13 +128,86 @@ public class MainView extends VerticalLayout {
         });
 
         // Botón para cancelar la operación
-        Button cancel2 = new Button("Cancelar", e2 -> {
-            UI.getCurrent().getPage().reload();
+        Button cancelNewPoblation = new Button("Cancelar", e2 -> {
+            tab1ContentH.removeAll();
+            tab1Content.removeAll();
+            try {
+                tab1ContentH.add(btn_ReloadPoblation, btn_AddPoblation);
+                tab1Content.add(tab1ContentH,MostrarGrid(service));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         });
 
         // Añadiendo los campos y botones al formulario
-        LFormAniadir.add(msCodeField2,yearField2,estCodeField2,estimateField2,seField2,lowerCIBField2,upperCIBField2,flagField2,save2,cancel2);
+        LFormAniadir.add(msCodeField2,yearField2,estCodeField2,estimateField2,seField2,lowerCIBField2,upperCIBField2,flagField2,saveNewPoblation,cancelNewPoblation);
         layoutarriba.add(LFormAniadir);
+
+        return layoutarriba;
+    }
+
+    public VerticalLayout btnAddProduct(GreetService service){
+        VerticalLayout layoutarriba = new VerticalLayout();
+
+        // Al pulsar el botón, aparece un formulario para rellenar los campos y otro botón para añadir los elementos escritos
+        Binder<Products> binder = new Binder<>(Products.class);
+        HorizontalLayout lytFormAddProduct = new HorizontalLayout();
+
+        // Campo de texto para nombre del producto
+        TextField tfProductName = new TextField();
+        tfProductName.setLabel("Name");
+        tfProductName.setPlaceholder("Mantas");
+        tfProductName.isRequired();
+
+        // Campo de texto para Descripción del producto
+        TextField tfProductDesc = new TextField();
+        tfProductDesc.setLabel("Description");
+        tfProductDesc.setPlaceholder("Mantas de lana para uso en climas fríos");
+        tfProductDesc.isRequired();
+
+        // Campo de texto para cantidad de Stock del pordocut
+        TextField tfProductStock = new TextField();
+        tfProductStock.setLabel("Stock");
+        tfProductStock.setPlaceholder("500");
+        tfProductStock.isRequired();
+
+        // Campo de texto para Fecha de caducidad del producto
+        TextField tfProductExpDate = new TextField();
+        tfProductExpDate.setLabel("Expiration Date");
+        tfProductExpDate.setPlaceholder("aaaa-mm-dd or NULL");
+        tfProductExpDate.isRequired();
+
+        // Botón para guardar la información
+        Button saveNewProduct = new Button("Aceptar", e2 -> {
+            Products edicionProducto = new Products();
+            edicionProducto.setId(UUID.randomUUID().toString());
+            edicionProducto.setName(tfProductName.getValue());
+            edicionProducto.setDescription(tfProductDesc.getValue());
+            edicionProducto.setStock(Float.parseFloat(tfProductStock.getValue()));
+            edicionProducto.setExpiration_date(tfProductExpDate.getValue());
+            try {
+                service.postProduct(edicionProducto);
+                UI.getCurrent().getPage().reload();
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+
+        // Botón para cancelar la operación
+        Button cancelNewProduct = new Button("Cancel", e2 -> {
+            tab3ContentH.removeAll();
+            tab3Content.removeAll();
+            try {
+                tab3ContentH.add(btn_ReloadProduct, btn_AddProduct);
+                tab3Content.add(tab3ContentH,MostrarGridProductos(service));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        // Añadiendo los campos y botones al formulario
+        lytFormAddProduct.add(tfProductName,tfProductDesc,tfProductStock,tfProductExpDate,saveNewProduct,cancelNewProduct);
+        layoutarriba.add(lytFormAddProduct);
 
         return layoutarriba;
     }
@@ -269,6 +343,100 @@ public class MainView extends VerticalLayout {
         return LayoutGrid;
     }
 
+    public VerticalLayout MostrarGridProductos(GreetService service) throws Exception {
+        VerticalLayout LayoutGrid = new VerticalLayout();
+
+        // Crear un nuevo grid para la clase ndData
+        Grid<Products> productGrid = new Grid<>(Products.class, false);
+
+        // Crear un editor para el grid
+        Editor<Products> productsEditor = productGrid.getEditor();
+
+        // Añadir columnas al grid con sus respectivos encabezados
+        Grid.Column<Products> idColumn = productGrid.addColumn(Products::getId).setHeader("ID");
+        Grid.Column<Products> msCodeColumn = productGrid.addColumn(Products::getName).setHeader("Name");
+        Grid.Column<Products> yearColumn = productGrid.addColumn(Products::getDescription).setHeader("Description");
+        Grid.Column<Products> estCodeColumn = productGrid.addColumn(Products::getStock).setHeader("Stock");
+        Grid.Column<Products> estimateColumn = productGrid.addColumn(Products::getExpiration_date).setHeader("Expiration Date");
+
+        // Columna para editar cada fila
+        Grid.Column<Products> editorProductColumn = productGrid.addComponentColumn(products -> {
+            Button edit = new Button("Edit");
+            edit.addClassName("edit");
+            edit.addClickListener(e -> {
+                productsEditor.editItem(products);
+            });
+            edit.setEnabled(!productsEditor.isOpen());
+            return edit;
+        });
+
+        // Crear un Binder para vincular datos
+        Binder<Products> binder = new Binder<>(Products.class);
+        productsEditor.setBinder(binder);
+        productsEditor.setBuffered(true);
+
+        // Configurar campos de texto y su validación
+        // Para cada campo se especifica la necesidad de llenado y se vincula al grid
+
+        TextField productNameField = new TextField();
+        binder.forField(productNameField)
+                .asRequired("Name must need it")
+                .bind(Products::getName, Products::setName);
+        msCodeColumn.setEditorComponent(productNameField);
+
+        TextField porductDescField = new TextField();
+        binder.forField(porductDescField)
+                .asRequired("Desc must need it")
+                .bind(Products::getDescription, Products::setDescription);
+        yearColumn.setEditorComponent(porductDescField);
+
+        TextField productStockField = new TextField();
+        binder.forField(productStockField).withConverter(new StringToFloatConverter("You have to input a Number"))
+                .asRequired("Stock must need it")
+                .bind(Products::getStock, Products::setStock);
+        estCodeColumn.setEditorComponent(productStockField);
+
+        // Al editar campos utilizamos el StringToFloatConverter para convertir el String introducido al usuario a Float
+        TextField productExpirationDateField = new TextField();
+        binder.forField(productExpirationDateField)
+                .asRequired("Estimate necesario")
+                .bind(Products::getExpiration_date, Products::setExpiration_date);
+        estimateColumn.setEditorComponent(productExpirationDateField);
+
+        // Configurar el bean para el binder
+        binder.setBean(new Products());
+
+        // Botones para guardar o cancelar la edición
+        Button productSave = new Button("Aceptar", e -> {
+            // Actualizar el bean con los datos del editor
+            Products editProduct = new Products();
+            editProduct.setName(productNameField.getValue());
+            editProduct.setDescription(porductDescField.getValue());
+            editProduct.setStock(Float.parseFloat(productStockField.getValue()));
+            editProduct.setExpiration_date(productExpirationDateField.getValue());
+            // Actualizar los datos en la base de datos
+            try {
+                service.editProduct(editProduct);
+                UI.getCurrent().getPage().reload();
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+
+        Button cancel = new Button(VaadinIcon.CLOSE.create(), e -> productsEditor.cancel());
+        cancel.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_ERROR);
+        HorizontalLayout actions = new HorizontalLayout(productSave, cancel);
+        actions.setPadding(false);
+        editorProductColumn.setEditorComponent(actions);
+
+        // Establecer los items del grid y añadir el grid al layout
+        productGrid.setItems(service.GetProduct());
+        LayoutGrid.add(productGrid);
+        LayoutGrid.setSizeFull();
+
+        return LayoutGrid;
+    }
+
     public VerticalLayout GridMsC(GreetService service) throws Exception{
 
         VerticalLayout LGMsC = new VerticalLayout();
@@ -327,28 +495,72 @@ public class MainView extends VerticalLayout {
         return LGMsC;
     }
 
+    /**
+     * Construct a new Vaadin view.
+     * <p>
+     * Build the initial UI state for the user accessing the application.
+     *
+     * @param service
+     *            The message service. Automatically injected Spring managed
+     *            bean.
+     */
     public MainView(@Autowired GreetService service) throws Exception {
 
         // Creamos las pestañas
-        Tab tab1 = new Tab("Parte 1");
-        Tab tab2 = new Tab("Parte 2");
+        Tab tab1 = new Tab("[AV] Población Objetivo");
+        Tab tab2 = new Tab("[CV] Población Objetivo]");
+        Tab tab3 = new Tab("[AV] Products");
 
         // Creamos el contenedor de las pestañas
-        Tabs tabs = new Tabs(tab1, tab2);
+        Tabs tabs = new Tabs(tab1, tab2, tab3);
 
         // Creamos el contenido de las pestañas
-        VerticalLayout tab1Content = new VerticalLayout();
         tab1Content.setSizeFull();
-
-        VerticalLayout tab2Content = new VerticalLayout();
         tab2Content.setSizeFull();
+        tab3Content.setSizeFull();
 
-        //boton de añadir elementos
-        Button botonAñadir = new Button("Añadir");
-        botonAñadir.addClickListener(e -> {
+        //boton de añadir elementos a la población objetiva
+        btn_AddPoblation.addClickListener(e -> {
             try {
                 tab1Content.removeAll();
-                tab1Content.add(botonañadir(service),MostrarGrid(service));
+                tab1Content.add(btn_ReloadPoblation, btnAddPoblation(service), MostrarGrid(service));
+
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+
+        //boton de añadir elementos a la BBDD de productos
+        btn_AddProduct.addClickListener(e -> {
+            try {
+                tab3Content.removeAll();
+                tab3Content.add(btn_ReloadProduct, btnAddProduct(service), MostrarGridProductos(service));
+
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+
+        //boton para recargar las tablas
+        btn_ReloadPoblation.addClickListener(e -> {
+            try {
+                tab1ContentH.removeAll();
+                tab1Content.removeAll();
+                tab1ContentH.add(btn_ReloadPoblation, btn_AddPoblation);
+                tab1Content.add(tab1ContentH,MostrarGrid(service));
+
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+
+        //boton para recargar las tablas
+        btn_ReloadProduct.addClickListener(e -> {
+            try {
+                tab3ContentH.removeAll();
+                tab3Content.removeAll();
+                tab3ContentH.add(btn_ReloadProduct, btn_AddProduct);
+                tab3Content.add(tab3ContentH,MostrarGridProductos(service));
 
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
@@ -356,24 +568,37 @@ public class MainView extends VerticalLayout {
         });
 
         // Creamos el contenido para cada pestaña
-        tab1Content.add(botonAñadir, MostrarGrid(service));
+        tab1ContentH.add(btn_ReloadPoblation, btn_AddPoblation);
+        tab1Content.add(tab1ContentH, MostrarGrid(service));
         tab2Content.add(GridMsC(service));
+        tab3ContentH.add(btn_ReloadProduct, btn_AddProduct);
+        tab3Content.add(tab3ContentH, MostrarGridProductos(service));
         tab1Content.setVisible(true);
         tab2Content.setVisible(false);
+        tab3Content.setVisible(false);
 
         // Cambiamos el contenido visible según la pestaña seleccionada
         tabs.addSelectedChangeListener(event -> {
             if (tabs.getSelectedTab() == tab1) {
                 tab1Content.setVisible(true);
                 tab2Content.setVisible(false);
-            } else {
+                tab3Content.setVisible(false);
+            }
+
+            if (tabs.getSelectedTab() == tab2) {
                 tab1Content.setVisible(false);
                 tab2Content.setVisible(true);
+                tab3Content.setVisible(false);
+            }
+            if (tabs.getSelectedTab() == tab3) {
+                tab1Content.setVisible(false);
+                tab2Content.setVisible(false);
+                tab3Content.setVisible(true);
             }
         });
 
         // Añadimos las pestañas
-        add(tabs, tab1Content, tab2Content);
+        add(tabs, tab1Content, tab2Content, tab3Content);
         setSizeFull();
 
 

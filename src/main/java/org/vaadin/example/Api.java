@@ -65,7 +65,7 @@ public class Api {
         // Convertimos el objeto ndData a JSON
         Gson gson = new Gson();
         UUID id = UUID.randomUUID();
-        product.setId(0);
+        product.setId(id.toString());
         String json = gson.toJson(product);
 
         // Creamos un HTTPRequest con la URL y el JSON

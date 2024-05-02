@@ -28,7 +28,7 @@ public class GreetService implements Serializable {
         String respuesta = api.editndData(ndData);
         return respuesta;
     }
-    //méttodo editndData que recibe un objeto de tipo ndData y lo envía a la API para su edición
+    //méttodo editProduct que recibe un objeto de tipo ndData y lo envía a la API para su edición
     public String editProduct(Products product) throws Exception {
         String respuesta = api.editProduct(product);
         return respuesta;

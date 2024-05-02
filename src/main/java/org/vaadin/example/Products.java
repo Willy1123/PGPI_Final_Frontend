@@ -9,16 +9,17 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 
 public class Products {
     //Creamos los atributos de la clase ndData
     @SerializedName("id")
-    private int id;
+    private String id;
     @SerializedName("name")
     private String name;
 
     @SerializedName("stock")
-    private int stock;
+    private Float stock;
 
     @SerializedName("description")
     private String description;
@@ -30,7 +31,7 @@ public class Products {
     public Products() {
     }
 
-    public Products(int id, String name, int stock, String description, String expiration_date) {
+    public Products(String id, String name, Float stock, String description, String expiration_date) {
         this.id = id;
         this.name = name;
         this.stock = stock;
@@ -38,11 +39,11 @@ public class Products {
         this.expiration_date = expiration_date;
     }
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -54,11 +55,11 @@ public class Products {
         this.name = name;
     }
 
-    public int getStock() {
+    public Float getStock() {
         return stock;
     }
 
-    public void setStock(int stock) {
+    public void setStock(Float stock) {
         this.stock = stock;
     }
 
