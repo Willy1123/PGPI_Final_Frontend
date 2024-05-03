@@ -146,4 +146,17 @@ public class Api {
 
     }
 
+    public String getPedidos() throws Exception {
+        // Se crea la URL de la API
+        String urlCompleta = URL + "Pedidos";
+        java.net.URL url = new URL(urlCompleta);
+        // Creamos un HTTPRequest con la URL
+        HttpRequest request = HttpRequest.newBuilder().uri(new URI(urlCompleta)).GET().build();
+        // Recibimos la respuesta de la API y la convertimos a String
+        HttpResponse<String> response = HttpClient.newBuilder().build().send(request, HttpResponse.BodyHandlers.ofString());
+
+        return response.body();
+
+    }
+
 }

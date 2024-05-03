@@ -1,24 +1,19 @@
 package org.vaadin.example;
 
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.grid.editor.Editor;
-import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
-import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -38,20 +33,27 @@ import java.util.stream.Collectors;
 public class UserView extends VerticalLayout {
 
     // Tabs
+    private final VerticalLayout tab1Content = new VerticalLayout();
+    private final HorizontalLayout tab1FilterReload = new HorizontalLayout();
     private final VerticalLayout tab2Content = new VerticalLayout();
-    private final HorizontalLayout tab2ContentH = new HorizontalLayout();
-    private final VerticalLayout tab4Content = new VerticalLayout();
-    private final HorizontalLayout tab4ContentH = new HorizontalLayout();
+    private final HorizontalLayout tab2FilteerReload = new HorizontalLayout();
+    private final VerticalLayout tab3Content = new VerticalLayout();
+    private final HorizontalLayout tab3Reload = new HorizontalLayout();
 
     // Buttons
     private final Button btn_ReloadPoblationCl = new Button("Reload");
     private final Button btn_ReloadProductCl = new Button("Reload");
+    private final Button btn_ReloadPedidoCl = new Button("Reload");
     private final Button filterButtonPoblation = new Button("Filtrar");
     private final Button filterButtonProduct = new Button("Filtrar");
+    private final Button btn_AddPedido = new Button("New");
 
     // Comboboxes
     private final ComboBox<String> filterComboBox = new ComboBox<>();
     private final ComboBox<String> productFilterComboBoxCl = new ComboBox<>();
+
+    private Grid<Pedidos> gridPedidos;
+    private CampaignForm campaignForm;
 
     public VerticalLayout GridMsC(GreetService service) throws Exception{
 
@@ -159,6 +161,74 @@ public class UserView extends VerticalLayout {
         return prCV;
     }
 
+    public VerticalLayout PedidosCV(GreetService service) throws Exception{
+
+        VerticalLayout pedCV = new VerticalLayout();
+        // Creamos un Grid para mostrar los datos
+        Grid<Pedidos> gridPedCV = new Grid<>(Pedidos.class, false);
+        Grid.Column<Pedidos> IdPedido = gridPedCV.addColumn(Pedidos::getId).setHeader("ID");
+        Grid.Column<Pedidos> nameCampaign = gridPedCV.addColumn(Pedidos::getNameCampaign).setHeader("Campaign Name");
+        Grid.Column<Pedidos> pickList = gridPedCV.addColumn(Pedidos::getItems).setHeader("Pick List");
+        Grid.Column<Pedidos> address = gridPedCV.addColumn(Pedidos::getAddress).setHeader("Address");
+        Grid.Column<Pedidos> postal = gridPedCV.addColumn(Pedidos::getPostal).setHeader("Postal");
+        Grid.Column<Pedidos> units = gridPedCV.addColumn(Pedidos::getZone).setHeader("Zone");
+        Grid.Column<Pedidos> proveedor = gridPedCV.addColumn(Pedidos::getAgency).setHeader("Agency");
+        Grid.Column<Pedidos> state = gridPedCV.addColumn(Pedidos::getState).setHeader("State");
+
+
+        // Añadir los objetos desde la API al grid
+        List<Pedidos> pedidos = service.GetPedidos();
+        gridPedCV.setItems(pedidos);
+        // Añadir los objetos al layout
+
+        pedCV.add(gridPedCV);
+        pedCV.setSizeFull();
+
+        return  pedCV;
+    }
+
+    public VerticalLayout btnAddPedido(GreetService service) throws Exception {
+        VerticalLayout layoutarriba = new VerticalLayout();
+
+        // Al pulsar el botón, aparece un formulario para rellenar los campos y otro botón para añadir los elementos escritos
+        HorizontalLayout LFormAniadir = new HorizontalLayout();
+
+        gridPedidos = new Grid<>(Pedidos.class);
+
+        // Crear el formulario con el servicio para obtener los productos
+        campaignForm = new CampaignForm(service);
+
+        campaignForm.getSaveButton().addClickListener(event -> {
+            Pedidos newCampaign = new Pedidos();
+            newCampaign.setNameCampaign(campaignForm.getCampaignNameComboBox().getValue().toString());
+            newCampaign.setItems(new ArrayList<>(campaignForm.getPickingList())); // Usar la lista de Picking
+
+            // Añadir al grid
+            List<Pedidos> currentCampaigns = new ArrayList<>(gridPedidos.getSelectedItems());
+            currentCampaigns.add(newCampaign);
+            gridPedidos.setItems(currentCampaigns);
+
+            Notification.show("Campaign saved!");
+        });
+
+        // Botón para cancelar la operación
+        Button cancelNewPedido = new Button("Cancelar", e2 -> {
+            tab3Reload.removeAll();
+            tab3Content.removeAll();
+            try {
+                tab3Reload.add(btn_ReloadPedidoCl, btn_AddPedido);
+                tab3Content.add(tab3Reload, PedidosCV(service));
+
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        LFormAniadir.add(campaignForm, cancelNewPedido);
+        layoutarriba.add(LFormAniadir);
+
+        return layoutarriba;
+    }
+
     /**
      * Construct a new Vaadin view.
      * <p>
@@ -171,23 +241,37 @@ public class UserView extends VerticalLayout {
     public UserView(@Autowired GreetService service) throws Exception {
 
         // Creamos las pestañas
-        Tab tab2 = new Tab("Población Objetivo");
-        Tab tab4 = new Tab("Products");
+        Tab tab1 = new Tab("Población Objetivo");
+        Tab tab2 = new Tab("Productos");
+        Tab tab3 = new Tab("Pedidos");
 
         // Creamos el contenedor de las pestañas
-        Tabs tabs = new Tabs(tab2, tab4);
+        Tabs tabs = new Tabs(tab1, tab2, tab3);
 
         // Creamos el contenido de las pestañas
+        tab1Content.setSizeFull();
         tab2Content.setSizeFull();
-        tab4Content.setSizeFull();
+        tab3Content.setSizeFull();
+
+        //boton de añadir elementos a la población objetiva
+        btn_AddPedido.addClickListener(e -> {
+            try {
+                tab3Reload.removeAll();
+                tab3Content.removeAll();
+                tab3Content.add(btn_ReloadPedidoCl, btnAddPedido(service), PedidosCV(service));
+
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        });
 
         //boton para recargar las tablas
         btn_ReloadPoblationCl.addClickListener(e -> {
             try {
-                tab2ContentH.removeAll();
-                tab2Content.removeAll();
-                tab2ContentH.add(filterComboBox, filterButtonPoblation, btn_ReloadPoblationCl);
-                tab2Content.add(tab2ContentH, GridMsC(service));
+                tab1FilterReload.removeAll();
+                tab1Content.removeAll();
+                tab1FilterReload.add(filterComboBox, filterButtonPoblation, btn_ReloadPoblationCl);
+                tab1Content.add(tab1FilterReload, GridMsC(service));
 
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
@@ -197,10 +281,23 @@ public class UserView extends VerticalLayout {
         //boton para recargar las tablas
         btn_ReloadProductCl.addClickListener(e -> {
             try {
-                tab4ContentH.removeAll();
-                tab4Content.removeAll();
-                tab4ContentH.add(productFilterComboBoxCl, filterButtonProduct, btn_ReloadProductCl);
-                tab4Content.add(tab4ContentH, ProductsCV(service));
+                tab2FilteerReload.removeAll();
+                tab2Content.removeAll();
+                tab2FilteerReload.add(productFilterComboBoxCl, filterButtonProduct, btn_ReloadProductCl);
+                tab2Content.add(tab2FilteerReload, ProductsCV(service));
+
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+
+        //boton para recargar las tablas
+        btn_ReloadPedidoCl.addClickListener(e -> {
+            try {
+                tab3Reload.removeAll();
+                tab3Content.removeAll();
+                tab3Reload.add(btn_ReloadPedidoCl, btn_AddPedido);
+                tab3Content.add(tab3Reload, PedidosCV(service));
 
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
@@ -208,27 +305,37 @@ public class UserView extends VerticalLayout {
         });
 
         // Creamos el contenido para cada pestaña
-        tab2ContentH.add(filterComboBox, filterButtonPoblation, btn_ReloadPoblationCl);
-        tab2Content.add(tab2ContentH, GridMsC(service));
-        tab4ContentH.add(productFilterComboBoxCl, filterButtonProduct, btn_ReloadProductCl);
-        tab4Content.add(tab4ContentH, ProductsCV(service));
-        tab2Content.setVisible(true);
-        tab4Content.setVisible(false);
+        tab1FilterReload.add(filterComboBox, filterButtonPoblation, btn_ReloadPoblationCl);
+        tab1Content.add(tab1FilterReload, GridMsC(service));
+        tab2FilteerReload.add(productFilterComboBoxCl, filterButtonProduct, btn_ReloadProductCl);
+        tab2Content.add(tab2FilteerReload, ProductsCV(service));
+        tab3Reload.add(btn_ReloadPedidoCl, btn_AddPedido);
+        tab3Content.add(tab3Reload, PedidosCV(service));
+        tab1Content.setVisible(true);
+        tab2Content.setVisible(false);
+        tab3Content.setVisible(false);
 
         // Cambiamos el contenido visible según la pestaña seleccionada
         tabs.addSelectedChangeListener(event -> {
-            if (tabs.getSelectedTab() == tab2) {
-                tab2Content.setVisible(true);
-                tab4Content.setVisible(false);
-            }
-            if (tabs.getSelectedTab() == tab4) {
+            if (tabs.getSelectedTab() == tab1) {
+                tab1Content.setVisible(true);
                 tab2Content.setVisible(false);
-                tab4Content.setVisible(true);
+                tab3Content.setVisible(false);
+            }
+            if (tabs.getSelectedTab() == tab2) {
+                tab1Content.setVisible(false);
+                tab2Content.setVisible(true);
+                tab3Content.setVisible(false);
+            }
+            if (tabs.getSelectedTab() == tab3) {
+                tab1Content.setVisible(false);
+                tab2Content.setVisible(false);
+                tab3Content.setVisible(true);
             }
         });
 
         // Añadimos las pestañas
-        add(tabs, tab2Content, tab4Content);
+        add(tabs, tab1Content, tab2Content, tab3Content);
         setSizeFull();
 
 
