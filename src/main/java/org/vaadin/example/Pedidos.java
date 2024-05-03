@@ -6,14 +6,16 @@ import java.util.UUID;
 public class Pedidos {
 
     private UUID id;
-    private String nameCampain;
+    private String nameCampaign;
     private String address;
     private List<Picking> items;
     private String postal;
-    private Integer units;
     private String zone;
+    private String agency;
     // 0 estandar, 1 urgente
-    private Boolean type;
+    private String type;
+    private String pedidoDate;
+    private String entregaDate;
     private String state;
 
     public UUID getId() {
@@ -24,12 +26,12 @@ public class Pedidos {
         this.id = id;
     }
 
-    public String getNameCampain() {
-        return nameCampain;
+    public String getNameCampaign() {
+        return nameCampaign;
     }
 
-    public void setNameCampain(String nameCampain) {
-        this.nameCampain = nameCampain;
+    public void setNameCampaign(String nameCampaign) {
+        this.nameCampaign = nameCampaign;
     }
 
     public String getAddress() {
@@ -56,14 +58,6 @@ public class Pedidos {
         this.postal = postal;
     }
 
-    public Integer getUnits() {
-        return units;
-    }
-
-    public void setUnits(Integer units) {
-        this.units = units;
-    }
-
     public String getZone() {
         return zone;
     }
@@ -72,12 +66,36 @@ public class Pedidos {
         this.zone = zone;
     }
 
-    public Boolean getType() {
+    public String getAgency() {
+        return agency;
+    }
+
+    public void setAgency(String agency) {
+        this.agency = agency;
+    }
+
+    public String getType() {
         return type;
     }
 
-    public void setType(Boolean type) {
+    public void setType(String type) {
         this.type = type;
+    }
+
+    public String getPedidoDate() {
+        return pedidoDate;
+    }
+
+    public void setPedidoDate(String pedidoDate) {
+        this.pedidoDate = pedidoDate;
+    }
+
+    public String getEntregaDate() {
+        return entregaDate;
+    }
+
+    public void setEntregaDate(String entregaDate) {
+        this.entregaDate = entregaDate;
     }
 
     public String getState() {

@@ -3,6 +3,7 @@ package org.vaadin.example;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.Tab;
@@ -11,6 +12,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,10 +46,14 @@ public class UserView extends VerticalLayout {
     private final Button btn_ReloadPedidoCl = new Button("Reload");
     private final Button filterButtonPoblation = new Button("Filtrar");
     private final Button filterButtonProduct = new Button("Filtrar");
+    private final Button btn_AddPedido = new Button("New");
 
     // Comboboxes
     private final ComboBox<String> filterComboBox = new ComboBox<>();
     private final ComboBox<String> productFilterComboBoxCl = new ComboBox<>();
+
+    private Grid<Pedidos> gridPedidos;
+    private CampaignForm campaignForm;
 
     public VerticalLayout GridMsC(GreetService service) throws Exception{
 
@@ -161,21 +167,66 @@ public class UserView extends VerticalLayout {
         // Creamos un Grid para mostrar los datos
         Grid<Pedidos> gridPedCV = new Grid<>(Pedidos.class, false);
         Grid.Column<Pedidos> IdPedido = gridPedCV.addColumn(Pedidos::getId).setHeader("ID");
-        Grid.Column<Pedidos> nameCampain = gridPedCV.addColumn(Pedidos::getNameCampain).setHeader("Campaing Name");
+        Grid.Column<Pedidos> nameCampaign = gridPedCV.addColumn(Pedidos::getNameCampaign).setHeader("Campaign Name");
+        Grid.Column<Pedidos> pickList = gridPedCV.addColumn(Pedidos::getItems).setHeader("Pick List");
         Grid.Column<Pedidos> address = gridPedCV.addColumn(Pedidos::getAddress).setHeader("Address");
         Grid.Column<Pedidos> postal = gridPedCV.addColumn(Pedidos::getPostal).setHeader("Postal");
-        Grid.Column<Pedidos> units = gridPedCV.addColumn(Pedidos::getUnits).setHeader("Units");
+        Grid.Column<Pedidos> units = gridPedCV.addColumn(Pedidos::getZone).setHeader("Zone");
+        Grid.Column<Pedidos> proveedor = gridPedCV.addColumn(Pedidos::getAgency).setHeader("Agency");
+        Grid.Column<Pedidos> state = gridPedCV.addColumn(Pedidos::getState).setHeader("State");
 
 
         // Añadir los objetos desde la API al grid
-        //List<Pedidos> pedidos = service.GetProductOrder();
-        //gridPedCV.setItems(pedidos);
+        List<Pedidos> pedidos = service.GetPedidos();
+        gridPedCV.setItems(pedidos);
         // Añadir los objetos al layout
 
         pedCV.add(gridPedCV);
         pedCV.setSizeFull();
 
         return  pedCV;
+    }
+
+    public VerticalLayout btnAddPedido(GreetService service) throws Exception {
+        VerticalLayout layoutarriba = new VerticalLayout();
+
+        // Al pulsar el botón, aparece un formulario para rellenar los campos y otro botón para añadir los elementos escritos
+        HorizontalLayout LFormAniadir = new HorizontalLayout();
+
+        gridPedidos = new Grid<>(Pedidos.class);
+
+        // Crear el formulario con el servicio para obtener los productos
+        campaignForm = new CampaignForm(service);
+
+        campaignForm.getSaveButton().addClickListener(event -> {
+            Pedidos newCampaign = new Pedidos();
+            newCampaign.setNameCampaign(campaignForm.getCampaignNameComboBox().getValue().toString());
+            newCampaign.setItems(new ArrayList<>(campaignForm.getPickingList())); // Usar la lista de Picking
+
+            // Añadir al grid
+            List<Pedidos> currentCampaigns = new ArrayList<>(gridPedidos.getSelectedItems());
+            currentCampaigns.add(newCampaign);
+            gridPedidos.setItems(currentCampaigns);
+
+            Notification.show("Campaign saved!");
+        });
+
+        // Botón para cancelar la operación
+        Button cancelNewPedido = new Button("Cancelar", e2 -> {
+            tab3Reload.removeAll();
+            tab3Content.removeAll();
+            try {
+                tab3Reload.add(btn_ReloadPedidoCl, btn_AddPedido);
+                tab3Content.add(tab3Reload, PedidosCV(service));
+
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        LFormAniadir.add(campaignForm, cancelNewPedido);
+        layoutarriba.add(LFormAniadir);
+
+        return layoutarriba;
     }
 
     /**
@@ -191,7 +242,7 @@ public class UserView extends VerticalLayout {
 
         // Creamos las pestañas
         Tab tab1 = new Tab("Población Objetivo");
-        Tab tab2 = new Tab("Products");
+        Tab tab2 = new Tab("Productos");
         Tab tab3 = new Tab("Pedidos");
 
         // Creamos el contenedor de las pestañas
@@ -201,6 +252,18 @@ public class UserView extends VerticalLayout {
         tab1Content.setSizeFull();
         tab2Content.setSizeFull();
         tab3Content.setSizeFull();
+
+        //boton de añadir elementos a la población objetiva
+        btn_AddPedido.addClickListener(e -> {
+            try {
+                tab3Reload.removeAll();
+                tab3Content.removeAll();
+                tab3Content.add(btn_ReloadPedidoCl, btnAddPedido(service), PedidosCV(service));
+
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        });
 
         //boton para recargar las tablas
         btn_ReloadPoblationCl.addClickListener(e -> {
@@ -231,10 +294,10 @@ public class UserView extends VerticalLayout {
         //boton para recargar las tablas
         btn_ReloadPedidoCl.addClickListener(e -> {
             try {
-                //tab2FilteerReload.removeAll();
+                tab3Reload.removeAll();
                 tab3Content.removeAll();
-                //tab2FilteerReload.add(productFilterComboBoxCl, filterButtonProduct, btn_ReloadProductCl);
-                tab3Content.add(btn_ReloadPedidoCl, PedidosCV(service));
+                tab3Reload.add(btn_ReloadPedidoCl, btn_AddPedido);
+                tab3Content.add(tab3Reload, PedidosCV(service));
 
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
@@ -246,7 +309,8 @@ public class UserView extends VerticalLayout {
         tab1Content.add(tab1FilterReload, GridMsC(service));
         tab2FilteerReload.add(productFilterComboBoxCl, filterButtonProduct, btn_ReloadProductCl);
         tab2Content.add(tab2FilteerReload, ProductsCV(service));
-        tab3Content.add(btn_ReloadPedidoCl, PedidosCV(service));
+        tab3Reload.add(btn_ReloadPedidoCl, btn_AddPedido);
+        tab3Content.add(tab3Reload, PedidosCV(service));
         tab1Content.setVisible(true);
         tab2Content.setVisible(false);
         tab3Content.setVisible(false);
