@@ -5,6 +5,7 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.editor.Editor;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
@@ -17,6 +18,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -39,27 +41,35 @@ public class MainView extends VerticalLayout {
 
     // Tabs
     private final VerticalLayout tab1Content = new VerticalLayout();
-    private final HorizontalLayout tab1ContentH = new HorizontalLayout();
+    private final HorizontalLayout tab1ReloadNew = new HorizontalLayout();
+    private final HorizontalLayout tab1Filter = new HorizontalLayout();
+    private final VerticalLayout tab2Content = new VerticalLayout();
+    private final HorizontalLayout tab2ReloadNew = new HorizontalLayout();
+    private final HorizontalLayout tab2Filter = new HorizontalLayout();
     private final VerticalLayout tab3Content = new VerticalLayout();
-    private final HorizontalLayout tab3ContentH = new HorizontalLayout();
+    private final HorizontalLayout tab3Reload = new HorizontalLayout();
 
     // Buttons
     private final Button btn_AddPoblation = new Button("New");
     private final Button btn_AddProduct = new Button("New");
     private final Button btn_ReloadPoblation = new Button("Reload");
     private final Button btn_ReloadProduct = new Button("Reload");
+    private final Button btn_ReloadPedidoCl = new Button("Reload");
     private final Button filterButtonPoblation = new Button("Filtrar");
     private final Button filterButtonProduct = new Button("Filtrar");
+    private final Button btn_AddPedido = new Button("New");
 
     // Comboboxes
     private final ComboBox<String> filterComboBox = new ComboBox<>();
-    private final ComboBox<String> productFilterComboBoxCl = new ComboBox<>();
+    private final ComboBox<String> productFilterComboBox = new ComboBox<>();
+
+    private Grid<Pedidos> gridPedidos;
+    private CampaignForm campaignForm;
 
     public VerticalLayout btnAddPoblation(GreetService service){
         VerticalLayout layoutarriba = new VerticalLayout();
 
         // Al pulsar el botón, aparece un formulario para rellenar los campos y otro botón para añadir los elementos escritos
-        Binder<ndData> binder = new Binder<>(ndData.class);
         HorizontalLayout LFormAniadir = new HorizontalLayout();
 
         // Campo de texto para msCode
@@ -124,7 +134,9 @@ public class MainView extends VerticalLayout {
             edicion.setFlag(flagField2.getValue());
             try {
                 service.postData(edicion);
-                UI.getCurrent().getPage().reload();
+                //UI.getCurrent().getPage().reload();
+                tab1Content.removeAll();
+                tab1Content.add(btn_ReloadPoblation, btnAddPoblation(service), MostrarGrid(service));
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
@@ -132,11 +144,14 @@ public class MainView extends VerticalLayout {
 
         // Botón para cancelar la operación
         Button cancelNewPoblation = new Button("Cancelar", e2 -> {
-            tab1ContentH.removeAll();
+            tab1ReloadNew.removeAll();
+            tab1Filter.removeAll();
             tab1Content.removeAll();
             try {
-                tab1ContentH.add(btn_ReloadPoblation, btn_AddPoblation);
-                tab1Content.add(tab1ContentH,MostrarGrid(service));
+                tab1ReloadNew.add(btn_ReloadPoblation, btn_AddPoblation);
+                tab1Filter.add(filterComboBox, filterButtonPoblation);
+                tab1Content.add(tab1ReloadNew, tab1Filter, MostrarGrid(service));
+
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -153,7 +168,6 @@ public class MainView extends VerticalLayout {
         VerticalLayout layoutarriba = new VerticalLayout();
 
         // Al pulsar el botón, aparece un formulario para rellenar los campos y otro botón para añadir los elementos escritos
-        Binder<Products> binder = new Binder<>(Products.class);
         HorizontalLayout lytFormAddProduct = new HorizontalLayout();
 
         // Campo de texto para nombre del producto
@@ -190,8 +204,8 @@ public class MainView extends VerticalLayout {
             try {
                 service.postProduct(edicionProducto);
                 //UI.getCurrent().getPage().reload();
-                tab3Content.removeAll();
-                tab3Content.add(btn_ReloadProduct, btnAddProduct(service), MostrarGridProductos(service));
+                tab2Content.removeAll();
+                tab2Content.add(btn_ReloadProduct, btnAddProduct(service), MostrarGridProductos(service));
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
@@ -199,11 +213,13 @@ public class MainView extends VerticalLayout {
 
         // Botón para cancelar la operación
         Button cancelNewProduct = new Button("Cancel", e2 -> {
-            tab3ContentH.removeAll();
-            tab3Content.removeAll();
+            tab2ReloadNew.removeAll();
+            tab2Filter.removeAll();
+            tab2Content.removeAll();
             try {
-                tab3ContentH.add(btn_ReloadProduct, btn_AddProduct);
-                tab3Content.add(tab3ContentH,MostrarGridProductos(service));
+                tab2ReloadNew.add(btn_ReloadProduct, btn_AddProduct);
+                tab2Filter.add(productFilterComboBox, filterButtonProduct);
+                tab2Content.add(tab2ReloadNew, tab2Filter, MostrarGridProductos(service));
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -339,8 +355,38 @@ public class MainView extends VerticalLayout {
         actions.setPadding(false);
         editorColumn.setEditorComponent(actions);
 
+        // Establecer el placeholder del ComboBox
+        filterComboBox.setPlaceholder("Filter by MsCode");
+
+        // Obtener todos los MsCode únicos de los datos
+        List<String> uniqueMsCodes = service.GetDataMsC().stream()
+                .map(ndData::getMsCode)
+                .distinct()
+                .collect(Collectors.toList());
+
+        // Añadir los MsCode únicos al ComboBox
+        filterComboBox.setItems(uniqueMsCodes);
+
+        // Crear un botón para aplicar el filtro
+        filterButtonPoblation.addClickListener(e -> {
+            // Obtener el valor seleccionado en el ComboBox
+            String filterValue = filterComboBox.getValue();
+            List<ndData> filteredData;
+            try {
+                // Filtrar los datos basándose en el valor seleccionado en el ComboBox
+                filteredData = service.Getdata().stream()
+                        .filter(ndData -> ndData.getMsCode().equals(filterValue))
+                        .collect(Collectors.toList());
+                // Actualizar el Grid con los datos filtrados
+                grid.setItems(filteredData);
+            } catch (Exception ex) {
+                // Imprimir la traza de la excepción en caso de error
+                ex.printStackTrace();
+            }
+        });
+
         // Establecer los items del grid y añadir el grid al layout
-        grid.setItems(service.Getdata());
+        grid.setItems(service.GetDataMsC());
         LayoutGrid.add(grid);
         LayoutGrid.setSizeFull();
 
@@ -433,6 +479,36 @@ public class MainView extends VerticalLayout {
         actions.setPadding(false);
         editorProductColumn.setEditorComponent(actions);
 
+        // Establecer el placeholder del ComboBox
+        productFilterComboBox.setPlaceholder("Filter by Product Name");
+
+        // Obtener todos los MsCode únicos de los datos
+        List<String> uniqueProductNames = service.GetProductOrder().stream()
+                .map(Products::getName)
+                .distinct()
+                .collect(Collectors.toList());
+
+        // Añadir los MsCode únicos al ComboBox
+        productFilterComboBox.setItems(uniqueProductNames);
+
+        // Crear un botón para aplicar el filtro
+        filterButtonProduct.addClickListener(e -> {
+            // Obtener el valor seleccionado en el ComboBox
+            String filterValue = productFilterComboBox.getValue();
+            List<Products> filteredProduct;
+            try {
+                // Filtrar los datos basándose en el valor seleccionado en el ComboBox
+                filteredProduct = service.GetProductOrder().stream()
+                        .filter(products -> products.getName().equals(filterValue))
+                        .collect(Collectors.toList());
+                // Actualizar el Grid con los datos filtrados
+                productGrid.setItems(filteredProduct);
+            } catch (Exception ex) {
+                // Imprimir la traza de la excepción en caso de error
+                ex.printStackTrace();
+            }
+        });
+
         // Establecer los items del grid y añadir el grid al layout
         productGrid.setItems(service.GetProductOrder());
         LayoutGrid.add(productGrid);
@@ -441,111 +517,74 @@ public class MainView extends VerticalLayout {
         return LayoutGrid;
     }
 
-    public VerticalLayout GridMsC(GreetService service) throws Exception{
+    public VerticalLayout PedidosCVA(GreetService service) throws Exception{
 
-        VerticalLayout LGMsC = new VerticalLayout();
+        VerticalLayout pedCV = new VerticalLayout();
         // Creamos un Grid para mostrar los datos
-        Grid<ndData> gridMsC = new Grid<>(ndData.class, false);
-        Grid.Column<ndData> IDMscColumn = gridMsC.addColumn(ndData::getID).setHeader("ID");
-        Grid.Column<ndData> msCodeMscColumn = gridMsC.addColumn(ndData::getMsCode).setHeader("Ms Code");
-        Grid.Column<ndData> yearMscColumn = gridMsC.addColumn(ndData::getYear).setHeader("Year");
-        Grid.Column<ndData> estCodeMscColumn = gridMsC.addColumn(ndData::getEstCode).setHeader("Est Code");
-        Grid.Column<ndData> estimateMscColumn = gridMsC.addColumn(ndData::getEstimate).setHeader("Estimate");
-        Grid.Column<ndData> seMscColumn = gridMsC.addColumn(ndData::getSe).setHeader("Se");
-        Grid.Column<ndData> lowerCIBMscColumn = gridMsC.addColumn(ndData::getLowerCIB).setHeader("Lower CIB");
-        Grid.Column<ndData> upperCIBMscColumn = gridMsC.addColumn(ndData::getUpperCIB).setHeader("Upper CIB");
-        Grid.Column<ndData> flagMscColumn = gridMsC.addColumn(ndData::getFlag).setHeader("Flag");
+        Grid<Pedidos> gridPedCV = new Grid<>(Pedidos.class, false);
+        Grid.Column<Pedidos> IdPedido = gridPedCV.addColumn(Pedidos::getId).setHeader("ID");
+        Grid.Column<Pedidos> nameCampaign = gridPedCV.addColumn(Pedidos::getNameCampaign).setHeader("Campaign Name");
+        Grid.Column<Pedidos> pickList = gridPedCV.addColumn(Pedidos::getItems).setHeader("Pick List");
+        Grid.Column<Pedidos> address = gridPedCV.addColumn(Pedidos::getAddress).setHeader("Address");
+        Grid.Column<Pedidos> postal = gridPedCV.addColumn(Pedidos::getPostal).setHeader("Postal");
+        Grid.Column<Pedidos> units = gridPedCV.addColumn(Pedidos::getZone).setHeader("Zone");
+        Grid.Column<Pedidos> proveedor = gridPedCV.addColumn(Pedidos::getAgency).setHeader("Agency");
+        Grid.Column<Pedidos> state = gridPedCV.addColumn(Pedidos::getState).setHeader("State");
 
-        // Establecer el placeholder del ComboBox
-        filterComboBox.setPlaceholder("Filter by MsCode");
-
-        // Obtener todos los MsCode únicos de los datos
-        List<String> uniqueMsCodes = service.Getdata().stream()
-                .map(ndData::getMsCode)
-                .distinct()
-                .collect(Collectors.toList());
-
-        // Añadir los MsCode únicos al ComboBox
-        filterComboBox.setItems(uniqueMsCodes);
-
-        // Crear un botón para aplicar el filtro
-        filterButtonPoblation.addClickListener(e -> {
-            // Obtener el valor seleccionado en el ComboBox
-            String filterValue = filterComboBox.getValue();
-            List<ndData> filteredData;
-            try {
-                // Filtrar los datos basándose en el valor seleccionado en el ComboBox
-                filteredData = service.Getdata().stream()
-                        .filter(ndData -> ndData.getMsCode().equals(filterValue))
-                        .collect(Collectors.toList());
-                // Actualizar el Grid con los datos filtrados
-                gridMsC.setItems(filteredData);
-            } catch (Exception ex) {
-                // Imprimir la traza de la excepción en caso de error
-                ex.printStackTrace();
-            }
-        });
 
         // Añadir los objetos desde la API al grid
-        List<ndData> ndData = service.GetDataMsC();
-        gridMsC.setItems(ndData);
+        List<Pedidos> pedidos = service.GetPedidos();
+        gridPedCV.setItems(pedidos);
         // Añadir los objetos al layout
 
-        LGMsC.add(gridMsC);
-        LGMsC.setSizeFull();
-        return LGMsC;
+        pedCV.add(gridPedCV);
+        pedCV.setSizeFull();
+
+        return  pedCV;
     }
 
-    public VerticalLayout ProductsCV(GreetService service) throws Exception{
+    public VerticalLayout btnAddPedido(GreetService service) throws Exception {
+        VerticalLayout layoutarriba = new VerticalLayout();
 
-        VerticalLayout prCV = new VerticalLayout();
-        // Creamos un Grid para mostrar los datos
-        Grid<Products> gridprCV = new Grid<>(Products.class, false);
-        Grid.Column<Products> IDMscColumn = gridprCV.addColumn(Products::getId).setHeader("ID");
-        Grid.Column<Products> msCodeMscColumn = gridprCV.addColumn(Products::getName).setHeader("Name");
-        Grid.Column<Products> yearMscColumn = gridprCV.addColumn(Products::getDescription).setHeader("Description");
-        Grid.Column<Products> estCodeMscColumn = gridprCV.addColumn(Products::getStock).setHeader("Stock");
-        Grid.Column<Products> estimateMscColumn = gridprCV.addColumn(Products::getExpiration_date).setHeader("Expiration Date");
+        // Al pulsar el botón, aparece un formulario para rellenar los campos y otro botón para añadir los elementos escritos
+        HorizontalLayout LFormAniadir = new HorizontalLayout();
 
-        // Establecer el placeholder del ComboBox
-        productFilterComboBoxCl.setPlaceholder("Filter by Product Name");
+        gridPedidos = new Grid<>(Pedidos.class);
 
-        // Obtener todos los MsCode únicos de los datos
-        List<String> uniqueProductNames = service.GetProduct().stream()
-                .map(Products::getName)
-                .distinct()
-                .collect(Collectors.toList());
+        // Crear el formulario con el servicio para obtener los productos
+        campaignForm = new CampaignForm(service);
 
-        // Añadir los MsCode únicos al ComboBox
-        productFilterComboBoxCl.setItems(uniqueProductNames);
+        campaignForm.getSaveButton().addClickListener(event -> {
+            Pedidos newCampaign = new Pedidos();
+            newCampaign.setNameCampaign(campaignForm.getCampaignNameComboBox().getValue().toString());
+            newCampaign.setItems(new ArrayList<>(campaignForm.getPickingList())); // Usar la lista de Picking
 
-        // Crear un botón para aplicar el filtro
-        filterButtonProduct.addClickListener(e -> {
-            // Obtener el valor seleccionado en el ComboBox
-            String filterValue = productFilterComboBoxCl.getValue();
-            List<Products> filteredProduct;
-            try {
-                // Filtrar los datos basándose en el valor seleccionado en el ComboBox
-                filteredProduct = service.GetProduct().stream()
-                        .filter(products -> products.getName().equals(filterValue))
-                        .collect(Collectors.toList());
-                // Actualizar el Grid con los datos filtrados
-                gridprCV.setItems(filteredProduct);
-            } catch (Exception ex) {
-                // Imprimir la traza de la excepción en caso de error
-                ex.printStackTrace();
-            }
+            // Añadir al grid
+            List<Pedidos> currentCampaigns = new ArrayList<>(gridPedidos.getSelectedItems());
+            currentCampaigns.add(newCampaign);
+            gridPedidos.setItems(currentCampaigns);
+
+            Notification.show("Campaign saved!");
         });
 
-        // Añadir los objetos desde la API al grid
-        List<Products> products = service.GetProductOrder();
-        gridprCV.setItems(products);
-        // Añadir los objetos al layout
+        // Botón para cancelar la operación
+        Button cancelNewPedido = new Button("Cancelar", e2 -> {
+            tab3Reload.removeAll();
+            tab3Content.removeAll();
+            try {
+                tab3Reload.add(btn_ReloadPedidoCl, btn_AddPedido);
+                tab3Content.add(tab3Reload, PedidosCVA(service));
 
-        prCV.add(gridprCV);
-        prCV.setSizeFull();
-        return prCV;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        LFormAniadir.add(campaignForm, cancelNewPedido);
+        layoutarriba.add(LFormAniadir);
+
+        return layoutarriba;
     }
+
 
     /**
      * Construct a new Vaadin view.
@@ -560,14 +599,28 @@ public class MainView extends VerticalLayout {
 
         // Creamos las pestañas
         Tab tab1 = new Tab("Población Objetivo");
-        Tab tab3 = new Tab("Products");
+        Tab tab2 = new Tab("Products");
+        Tab tab3 = new Tab("Pedidos");
 
         // Creamos el contenedor de las pestañas
-        Tabs tabs = new Tabs(tab1, tab3);
+        Tabs tabs = new Tabs(tab1, tab2, tab3);
 
         // Creamos el contenido de las pestañas
         tab1Content.setSizeFull();
+        tab2Content.setSizeFull();
         tab3Content.setSizeFull();
+
+        //boton de añadir elementos a la población objetiva
+        btn_AddPedido.addClickListener(e -> {
+            try {
+                tab3Reload.removeAll();
+                tab3Content.removeAll();
+                tab3Content.add(btn_ReloadPedidoCl, btnAddPedido(service), PedidosCVA(service));
+
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        });
 
         //boton de añadir elementos a la población objetiva
         btn_AddPoblation.addClickListener(e -> {
@@ -583,8 +636,8 @@ public class MainView extends VerticalLayout {
         //boton de añadir elementos a la BBDD de productos
         btn_AddProduct.addClickListener(e -> {
             try {
-                tab3Content.removeAll();
-                tab3Content.add(btn_ReloadProduct, btnAddProduct(service), MostrarGridProductos(service));
+                tab2Content.removeAll();
+                tab2Content.add(btn_ReloadProduct, btnAddProduct(service), MostrarGridProductos(service));
 
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
@@ -594,10 +647,12 @@ public class MainView extends VerticalLayout {
         //boton para recargar las tablas
         btn_ReloadPoblation.addClickListener(e -> {
             try {
-                tab1ContentH.removeAll();
+                tab1ReloadNew.removeAll();
+                tab1Filter.removeAll();
                 tab1Content.removeAll();
-                tab1ContentH.add(btn_ReloadPoblation, btn_AddPoblation);
-                tab1Content.add(tab1ContentH,MostrarGrid(service));
+                tab1ReloadNew.add(btn_ReloadPoblation, btn_AddPoblation);
+                tab1Filter.add(filterComboBox, filterButtonPoblation);
+                tab1Content.add(tab1ReloadNew, tab1Filter, MostrarGrid(service));
 
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
@@ -607,42 +662,66 @@ public class MainView extends VerticalLayout {
         //boton para recargar las tablas
         btn_ReloadProduct.addClickListener(e -> {
             try {
-                tab3ContentH.removeAll();
-                tab3Content.removeAll();
-                tab3ContentH.add(btn_ReloadProduct, btn_AddProduct);
-                tab3Content.add(tab3ContentH,MostrarGridProductos(service));
+                tab2ReloadNew.removeAll();
+                tab2Filter.removeAll();
+                tab2Content.removeAll();
+                tab2ReloadNew.add(btn_ReloadProduct, btn_AddProduct);
+                tab2Filter.add(productFilterComboBox, filterButtonProduct);
+                tab2Content.add(tab2ReloadNew, tab2Filter, MostrarGridProductos(service));
 
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
         });
 
+        //boton para recargar las tablas
+        btn_ReloadPedidoCl.addClickListener(e -> {
+            try {
+                tab3Reload.removeAll();
+                tab3Content.removeAll();
+                tab3Reload.add(btn_ReloadPedidoCl, btn_AddPedido);
+                tab3Content.add(tab3Reload, PedidosCVA(service));
+
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        });
 
         // Creamos el contenido para cada pestaña
-        tab1ContentH.add(btn_ReloadPoblation, btn_AddPoblation);
-        tab1Content.add(tab1ContentH, MostrarGrid(service));
-        tab3ContentH.add(btn_ReloadProduct, btn_AddProduct);
-        tab3Content.add(tab3ContentH, MostrarGridProductos(service));
+        tab1ReloadNew.add(btn_ReloadPoblation, btn_AddPoblation);
+        tab1Filter.add(filterComboBox, filterButtonPoblation);
+        tab1Content.add(tab1ReloadNew, tab1Filter, MostrarGrid(service));
+        tab2ReloadNew.add(btn_ReloadProduct, btn_AddProduct);
+        tab2Filter.add(productFilterComboBox, filterButtonProduct);
+        tab2Content.add(tab2ReloadNew, tab2Filter, MostrarGridProductos(service));;
+        tab3Reload.add(btn_ReloadPedidoCl, btn_AddPedido);
+        tab3Content.add(tab3Reload, PedidosCVA(service));
         tab1Content.setVisible(true);
+        tab2Content.setVisible(false);
         tab3Content.setVisible(false);
 
         // Cambiamos el contenido visible según la pestaña seleccionada
         tabs.addSelectedChangeListener(event -> {
             if (tabs.getSelectedTab() == tab1) {
                 tab1Content.setVisible(true);
+                tab2Content.setVisible(false);
                 tab3Content.setVisible(false);
             }
-
+            if (tabs.getSelectedTab() == tab2) {
+                tab1Content.setVisible(false);
+                tab2Content.setVisible(true);
+                tab3Content.setVisible(false);
+            }
             if (tabs.getSelectedTab() == tab3) {
                 tab1Content.setVisible(false);
+                tab2Content.setVisible(false);
                 tab3Content.setVisible(true);
             }
         });
 
         // Añadimos las pestañas
-        add(tabs, tab1Content, tab3Content);
+        add(tabs, tab1Content, tab2Content, tab3Content);
         setSizeFull();
-
 
     }
 }
