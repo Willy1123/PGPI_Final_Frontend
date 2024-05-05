@@ -1,4 +1,4 @@
-package org.vaadin.example;
+package org.vaadin.example.view;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -11,6 +11,12 @@ import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.vaadin.example.CampaignForm;
+import org.vaadin.example.controller.GreetService;
+import org.vaadin.example.domain.Pedidos;
+import org.vaadin.example.domain.Picking;
+import org.vaadin.example.domain.Products;
+import org.vaadin.example.domain.ndData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -168,8 +174,15 @@ public class UserView extends VerticalLayout {
         Grid<Pedidos> gridPedCV = new Grid<>(Pedidos.class, false);
         Grid.Column<Pedidos> IdPedido = gridPedCV.addColumn(Pedidos::getId).setHeader("ID");
         Grid.Column<Pedidos> nameCampaign = gridPedCV.addColumn(Pedidos::getNameCampaign).setHeader("Campaign Name");
-        Grid.Column<Pedidos> pickList = gridPedCV.addColumn(Pedidos::getItems).setHeader("Pick List");
-        Grid.Column<Pedidos> address = gridPedCV.addColumn(Pedidos::getAddress).setHeader("Address");
+        //Grid.Column<Pedidos> pickList = gridPedCV.addColumn(Pedidos::getItems).setHeader("Pick List");
+        // Columna para mostrar la lista de objetos Picking
+        gridPedCV.addColumn(pedidos -> {
+            List<Picking> items = pedidos.getItems();
+            return items.stream()
+                    .map(picking -> picking.getProductName().toString() + " (" + picking.getQuantity() + ")")
+                    .collect(Collectors.joining(", "));
+        }).setHeader("Pick List");
+        Grid.Column<Pedidos> address = gridPedCV.addColumn(Pedidos::getDir).setHeader("Address");
         Grid.Column<Pedidos> postal = gridPedCV.addColumn(Pedidos::getPostal).setHeader("Postal");
         Grid.Column<Pedidos> units = gridPedCV.addColumn(Pedidos::getZone).setHeader("Zone");
         Grid.Column<Pedidos> proveedor = gridPedCV.addColumn(Pedidos::getAgency).setHeader("Agency");

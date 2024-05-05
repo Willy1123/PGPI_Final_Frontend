@@ -1,15 +1,6 @@
-package org.vaadin.example;
+package org.vaadin.example.domain;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
-
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.UUID;
 
 public class Products {
     //Creamos los atributos de la clase ndData

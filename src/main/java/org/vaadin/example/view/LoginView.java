@@ -1,4 +1,4 @@
-package org.vaadin.example;
+package org.vaadin.example.view;
 
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.PageTitle;

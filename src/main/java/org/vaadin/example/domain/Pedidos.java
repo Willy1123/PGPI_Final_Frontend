@@ -1,13 +1,12 @@
-package org.vaadin.example;
+package org.vaadin.example.domain;
 
 import java.util.List;
-import java.util.UUID;
 
 public class Pedidos {
 
-    private UUID id;
+    private String id;
     private String nameCampaign;
-    private String address;
+    private String dir;
     private List<Picking> items;
     private String postal;
     private String zone;
@@ -18,11 +17,11 @@ public class Pedidos {
     private String entregaDate;
     private String state;
 
-    public UUID getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(UUID id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -34,12 +33,12 @@ public class Pedidos {
         this.nameCampaign = nameCampaign;
     }
 
-    public String getAddress() {
-        return address;
+    public String getDir() {
+        return dir;
     }
 
-    public void setAddress(String address) {
-        this.address = address;
+    public void setDir(String dir) {
+        this.dir = dir;
     }
 
     public List<Picking> getItems() {

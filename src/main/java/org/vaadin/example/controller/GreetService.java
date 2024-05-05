@@ -1,4 +1,4 @@
-package org.vaadin.example;
+package org.vaadin.example.controller;
 
 import java.io.Serializable;
 import java.util.List;
@@ -7,6 +7,9 @@ import com.nimbusds.jose.shaded.gson.Gson;
 import com.nimbusds.jose.shaded.gson.reflect.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.vaadin.example.domain.Pedidos;
+import org.vaadin.example.domain.Products;
+import org.vaadin.example.domain.ndData;
 
 @Service
 public class GreetService implements Serializable {
@@ -53,6 +56,11 @@ public class GreetService implements Serializable {
         String respuesta = api.postProduct(product);
         return respuesta;
     }
+    //método postData que recibe un objeto de tipo ndData y lo envía a la API para su creación
+    public String postPedido(Pedidos pedidos) throws Exception {
+        String respuesta = api.postPedido(pedidos);
+        return respuesta;
+    }
 
     //método GetDataMsC que devuelve una lista de ndData a partir del JSON que recive de la API
     public List<ndData> GetDataMsC() throws Exception {
@@ -73,6 +81,14 @@ public class GreetService implements Serializable {
     public List<Pedidos> GetPedidos() throws Exception {
         Gson gson = new Gson();
         List<Pedidos> pedidos = gson.fromJson(api.getPedidos(), new TypeToken<List<Pedidos>>() {}.getType());
+
+        return pedidos;
+    }
+
+    //método GetDataMsC que devuelve una lista de ndData a partir del JSON que recive de la API
+    public List<Pedidos> GetPedidosOrderByNew() throws Exception {
+        Gson gson = new Gson();
+        List<Pedidos> pedidos = gson.fromJson(api.getPedidosOrder(), new TypeToken<List<Pedidos>>() {}.getType());
 
         return pedidos;
     }
