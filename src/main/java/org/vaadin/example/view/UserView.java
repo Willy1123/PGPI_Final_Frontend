@@ -1,16 +1,24 @@
-package org.vaadin.example;
+package org.vaadin.example.view;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.vaadin.example.CampaignForm;
+import org.vaadin.example.controller.GreetService;
+import org.vaadin.example.domain.Pedidos;
+import org.vaadin.example.domain.Tuple;
+import org.vaadin.example.domain.Products;
+import org.vaadin.example.domain.ndData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,10 +68,10 @@ public class UserView extends VerticalLayout {
         VerticalLayout LGMsC = new VerticalLayout();
         // Creamos un Grid para mostrar los datos
         Grid<ndData> gridMsC = new Grid<>(ndData.class, false);
-        Grid.Column<ndData> IDMscColumn = gridMsC.addColumn(ndData::getID).setHeader("ID");
-        Grid.Column<ndData> msCodeMscColumn = gridMsC.addColumn(ndData::getMsCode).setHeader("Ms Code");
+        Grid.Column<ndData> IDMscColumn = gridMsC.addColumn(ndData::getID).setHeader("ID").setAutoWidth(true);
+        Grid.Column<ndData> msCodeMscColumn = gridMsC.addColumn(ndData::getMsCode).setHeader("Ms Code").setAutoWidth(true);
         Grid.Column<ndData> yearMscColumn = gridMsC.addColumn(ndData::getYear).setHeader("Year");
-        Grid.Column<ndData> estCodeMscColumn = gridMsC.addColumn(ndData::getEstCode).setHeader("Est Code");
+        Grid.Column<ndData> estCodeMscColumn = gridMsC.addColumn(ndData::getEstCode).setHeader("Est Code").setAutoWidth(true);
         Grid.Column<ndData> estimateMscColumn = gridMsC.addColumn(ndData::getEstimate).setHeader("Estimate");
         Grid.Column<ndData> seMscColumn = gridMsC.addColumn(ndData::getSe).setHeader("Se");
         Grid.Column<ndData> lowerCIBMscColumn = gridMsC.addColumn(ndData::getLowerCIB).setHeader("Lower CIB");
@@ -115,9 +123,19 @@ public class UserView extends VerticalLayout {
         VerticalLayout prCV = new VerticalLayout();
         // Creamos un Grid para mostrar los datos
         Grid<Products> gridprCV = new Grid<>(Products.class, false);
-        Grid.Column<Products> IDMscColumn = gridprCV.addColumn(Products::getId).setHeader("ID");
+        Grid.Column<Products> IDMscColumn = gridprCV.addColumn(Products::getId).setHeader("ID").setAutoWidth(true);
         Grid.Column<Products> msCodeMscColumn = gridprCV.addColumn(Products::getName).setHeader("Name");
-        Grid.Column<Products> yearMscColumn = gridprCV.addColumn(Products::getDescription).setHeader("Description");
+        // Columna para Address con ComponentRenderer para word-wrap
+        Grid.Column<Products> yearColumn = gridprCV.addColumn(new ComponentRenderer<>(products -> {
+            HorizontalLayout layout = new HorizontalLayout();
+            layout.getStyle().set("white-space", "normal"); // Permitir word-wrap
+
+            Span descSpan = new Span(products.getDescription()); // Texto de la dirección
+            descSpan.getStyle().set("white-space", "normal"); // Permitir word-wrap
+
+            layout.add(descSpan); // Agregar el texto de la dirección
+            return layout;
+        })).setHeader("Description").setAutoWidth(false); // No ajustar automáticamente el ancho
         Grid.Column<Products> estCodeMscColumn = gridprCV.addColumn(Products::getStock).setHeader("Stock");
         Grid.Column<Products> estimateMscColumn = gridprCV.addColumn(Products::getExpiration_date).setHeader("Expiration Date");
 
@@ -166,10 +184,25 @@ public class UserView extends VerticalLayout {
         VerticalLayout pedCV = new VerticalLayout();
         // Creamos un Grid para mostrar los datos
         Grid<Pedidos> gridPedCV = new Grid<>(Pedidos.class, false);
-        Grid.Column<Pedidos> IdPedido = gridPedCV.addColumn(Pedidos::getId).setHeader("ID");
+        Grid.Column<Pedidos> IdPedido = gridPedCV.addColumn(Pedidos::getId).setHeader("ID").setAutoWidth(true);
         Grid.Column<Pedidos> nameCampaign = gridPedCV.addColumn(Pedidos::getNameCampaign).setHeader("Campaign Name");
-        Grid.Column<Pedidos> pickList = gridPedCV.addColumn(Pedidos::getItems).setHeader("Pick List");
-        Grid.Column<Pedidos> address = gridPedCV.addColumn(Pedidos::getAddress).setHeader("Address");
+        // Columna para Pick List usando ComponentRenderer con word-wrap
+        gridPedCV.addColumn(new ComponentRenderer<>(pedidos -> {
+            HorizontalLayout layout = new HorizontalLayout();
+            layout.getStyle().set("white-space", "normal"); // Permitir word-wrap
+
+            List<Tuple> items = pedidos.getItems();
+            // Convertir la lista a texto y permitir saltos de línea
+            String text = items.stream()
+                    .map(tuple -> tuple.getProductName().toString() + " (" + tuple.getQuantity() + ")")
+                    .collect(Collectors.joining("\n")); // Salto de línea para múltiples líneas
+
+            Span span = new Span(text);
+            span.getStyle().set("white-space", "pre-wrap"); // Permitir división en múltiples líneas
+            layout.add(span);
+            return layout;
+        })).setHeader("Pick List").setAutoWidth(true); // Permitir ajuste del ancho
+        Grid.Column<Pedidos> address = gridPedCV.addColumn(Pedidos::getDir).setHeader("Address").setAutoWidth(true);
         Grid.Column<Pedidos> postal = gridPedCV.addColumn(Pedidos::getPostal).setHeader("Postal");
         Grid.Column<Pedidos> units = gridPedCV.addColumn(Pedidos::getZone).setHeader("Zone");
         Grid.Column<Pedidos> proveedor = gridPedCV.addColumn(Pedidos::getAgency).setHeader("Agency");

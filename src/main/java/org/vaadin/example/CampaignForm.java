@@ -1,25 +1,30 @@
 package org.vaadin.example;
 
-import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.notification.Notification;
+import org.vaadin.example.controller.GreetService;
+import org.vaadin.example.domain.Pedidos;
+import org.vaadin.example.domain.Tuple;
+import org.vaadin.example.domain.Products;
+import org.vaadin.example.domain.ndData;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class CampaignForm extends HorizontalLayout {
     private ComboBox<String> campaignNameComboBox;
-    private ComboBox<Products> productComboBox;
+    private ComboBox<String> productComboBox;
     private ComboBox<String> agency;
     private TextField address;
     private TextField postal;
     private TextField zone;
     private TextField quantityField;
-    private List<Picking> pickingList;
+    private List<Tuple> tupleList;
     private Button addPickingButton;
     private Button saveButton;
 
@@ -48,45 +53,67 @@ public class CampaignForm extends HorizontalLayout {
 
         agency.setItems(opciones);
 
+        List<String> uniqueProductos = greetService.GetProductOrder().stream()
+                .map(Products::getName)
+                .distinct()
+                .collect(Collectors.toList());
         // ComboBox para seleccionar el producto
         productComboBox = new ComboBox<>("Product");
-        productComboBox.setItems(greetService.GetProductOrder()); // Rellenar con datos del backend
-        productComboBox.setItemLabelGenerator(Products::getName); // Mostrar el nombre del producto
+        productComboBox.setItems(uniqueProductos); // Rellenar con datos del backend
 
         // Campo para la cantidad
         quantityField = new TextField("Quantity");
 
         // Lista temporal para almacenar elementos de Picking
-        pickingList = new ArrayList<>();
+        tupleList = new ArrayList<>();
 
         // Botón para añadir elementos a la lista temporal de Picking
         addPickingButton = new Button("Add Picking");
         addPickingButton.addClickListener(event -> {
-            Products selectedProduct = productComboBox.getValue();
-            if (selectedProduct != null) {
+            String selectedProductName = productComboBox.getValue();
+            if (!selectedProductName.isEmpty()) {
                 try {
-                    int quantity = Integer.parseInt(quantityField.getValue());
-                    Picking picking = new Picking();
-                    picking.setName(selectedProduct);
-                    picking.setQuantity(quantity);
-                    pickingList.add(picking);
+                    int quantity = Integer.parseInt(quantityField.getValue()); // Verificar la conversión
+                    Tuple tuple = new Tuple();
+                    Products selectedProduct = new Products(); // No es necesario crear un producto nuevo
+                    //selectedProduct.setName(selectedProductName);
+                    tuple.setProductName(selectedProductName);
+                    tuple.setQuantity(quantity);
+                    tupleList.add(tuple); // Añadir a la lista
                     Notification.show("Picking item added");
                 } catch (NumberFormatException e) {
-                    Notification.show("Invalid quantity");
+                    Notification.show("Invalid quantity. Please enter a number.");
                 }
             } else {
-                Notification.show("Please select a product");
+                Notification.show("Please select a product.");
             }
         });
 
+
         // Botón para guardar la campaña
-        saveButton = new Button("Save Campaign");
+        saveButton = new Button("Save Campaign", e2 -> {
+            Pedidos newPedido = new Pedidos();
+            newPedido.setId(UUID.randomUUID().toString());
+            newPedido.setNameCampaign(campaignNameComboBox.getValue());
+            newPedido.setItems(tupleList);
+            newPedido.setDir(address.getValue());
+            newPedido.setPostal(postal.getValue());
+            newPedido.setZone(zone.getValue());
+            newPedido.setAgency(agency.getValue());
+            newPedido.setState("pendiente");
+            try {
+                greetService.postPedido(newPedido);
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+
+        });
 
         add(campaignNameComboBox, productComboBox, quantityField, address, postal, zone, agency, addPickingButton, saveButton);
     }
 
-    public List<Picking> getPickingList() {
-        return pickingList;
+    public List<Tuple> getPickingList() {
+        return tupleList;
     }
 
     public ComboBox<String> getCampaignNameComboBox() {

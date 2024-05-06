@@ -1,15 +1,17 @@
-package org.vaadin.example;
+package org.vaadin.example.view;
 
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.editor.Editor;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.PageTitle;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.vaadin.flow.component.button.Button;
@@ -17,6 +19,13 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
+import org.vaadin.example.CampaignForm;
+import org.vaadin.example.controller.GreetService;
+import org.vaadin.example.StringToFloatConverter;
+import org.vaadin.example.domain.Pedidos;
+import org.vaadin.example.domain.Tuple;
+import org.vaadin.example.domain.Products;
+import org.vaadin.example.domain.ndData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -242,10 +251,10 @@ public class MainView extends VerticalLayout {
         Editor<ndData> editor = grid.getEditor();
 
         // Añadir columnas al grid con sus respectivos encabezados
-        Grid.Column<ndData> idColumn = grid.addColumn(ndData::getID).setHeader("ID");
-        Grid.Column<ndData> msCodeColumn = grid.addColumn(ndData::getMsCode).setHeader("Ms Code");
+        Grid.Column<ndData> idColumn = grid.addColumn(ndData::getID).setHeader("ID").setAutoWidth(true);
+        Grid.Column<ndData> msCodeColumn = grid.addColumn(ndData::getMsCode).setHeader("Ms Code").setAutoWidth(true);
         Grid.Column<ndData> yearColumn = grid.addColumn(ndData::getYear).setHeader("Year");
-        Grid.Column<ndData> estCodeColumn = grid.addColumn(ndData::getEstCode).setHeader("Est Code");
+        Grid.Column<ndData> estCodeColumn = grid.addColumn(ndData::getEstCode).setHeader("Est Code").setAutoWidth(true);
         Grid.Column<ndData> estimateColumn = grid.addColumn(ndData::getEstimate).setHeader("Estimate");
         Grid.Column<ndData> seColumn = grid.addColumn(ndData::getSe).setHeader("Se");
         Grid.Column<ndData> lowerCIBColumn = grid.addColumn(ndData::getLowerCIB).setHeader("Lower CIB");
@@ -403,9 +412,20 @@ public class MainView extends VerticalLayout {
         Editor<Products> productsEditor = productGrid.getEditor();
 
         // Añadir columnas al grid con sus respectivos encabezados
-        Grid.Column<Products> idColumn = productGrid.addColumn(Products::getId).setHeader("ID");
+        Grid.Column<Products> idColumn = productGrid.addColumn(Products::getId).setHeader("ID").setAutoWidth(true);
         Grid.Column<Products> msCodeColumn = productGrid.addColumn(Products::getName).setHeader("Name");
-        Grid.Column<Products> yearColumn = productGrid.addColumn(Products::getDescription).setHeader("Description");
+        //Grid.Column<Products> yearColumn = productGrid.addColumn(Products::getDescription).setHeader("Description").setAutoWidth(true);
+        // Columna para Address con ComponentRenderer para word-wrap
+        Grid.Column<Products> yearColumn = productGrid.addColumn(new ComponentRenderer<>(products -> {
+            HorizontalLayout layout = new HorizontalLayout();
+            layout.getStyle().set("white-space", "normal"); // Permitir word-wrap
+
+            Span descSpan = new Span(products.getDescription()); // Texto de la dirección
+            descSpan.getStyle().set("white-space", "normal"); // Permitir word-wrap
+
+            layout.add(descSpan); // Agregar el texto de la dirección
+            return layout;
+        })).setHeader("Description").setAutoWidth(false); // No ajustar automáticamente el ancho
         Grid.Column<Products> estCodeColumn = productGrid.addColumn(Products::getStock).setHeader("Stock");
         Grid.Column<Products> estimateColumn = productGrid.addColumn(Products::getExpiration_date).setHeader("Expiration Date");
 
@@ -522,10 +542,32 @@ public class MainView extends VerticalLayout {
         VerticalLayout pedCV = new VerticalLayout();
         // Creamos un Grid para mostrar los datos
         Grid<Pedidos> gridPedCV = new Grid<>(Pedidos.class, false);
-        Grid.Column<Pedidos> IdPedido = gridPedCV.addColumn(Pedidos::getId).setHeader("ID");
+
+        // Crear un Binder para el editor
+        Binder<Pedidos> binder = new Binder<>(Pedidos.class);
+
+        // Crear un editor para el grid
+        Editor<Pedidos> pedidosEditor = gridPedCV.getEditor();
+        pedidosEditor.setBinder(binder);
+        pedidosEditor.setBuffered(true);
+
+        Grid.Column<Pedidos> IdPedido = gridPedCV.addColumn(Pedidos::getId).setHeader("ID").setAutoWidth(true);
         Grid.Column<Pedidos> nameCampaign = gridPedCV.addColumn(Pedidos::getNameCampaign).setHeader("Campaign Name");
-        Grid.Column<Pedidos> pickList = gridPedCV.addColumn(Pedidos::getItems).setHeader("Pick List");
-        Grid.Column<Pedidos> address = gridPedCV.addColumn(Pedidos::getAddress).setHeader("Address");
+        gridPedCV.addColumn(new ComponentRenderer<>(pedidos -> {
+            HorizontalLayout layout = new HorizontalLayout();
+            layout.getStyle().set("white-space", "normal"); // Permitir word-wrap
+
+            List<Tuple> items = pedidos.getItems();
+            String text = items.stream()
+                    .map(tuple -> tuple.getProductName().toString() + " (" + tuple.getQuantity() + ")")
+                    .collect(Collectors.joining("\n"));
+
+            Span span = new Span(text);
+            span.getStyle().set("white-space", "pre-wrap"); // Permitir división en múltiples líneas
+            layout.add(span);
+            return layout;
+        })).setHeader("Pick List").setAutoWidth(true);
+        Grid.Column<Pedidos> address = gridPedCV.addColumn(Pedidos::getDir).setHeader("Address").setAutoWidth(true);
         Grid.Column<Pedidos> postal = gridPedCV.addColumn(Pedidos::getPostal).setHeader("Postal");
         Grid.Column<Pedidos> units = gridPedCV.addColumn(Pedidos::getZone).setHeader("Zone");
         Grid.Column<Pedidos> proveedor = gridPedCV.addColumn(Pedidos::getAgency).setHeader("Agency");
@@ -536,11 +578,10 @@ public class MainView extends VerticalLayout {
         List<Pedidos> pedidos = service.GetPedidos();
         gridPedCV.setItems(pedidos);
         // Añadir los objetos al layout
-
         pedCV.add(gridPedCV);
         pedCV.setSizeFull();
 
-        return  pedCV;
+        return pedCV;
     }
 
     public VerticalLayout btnAddPedido(GreetService service) throws Exception {
@@ -599,7 +640,7 @@ public class MainView extends VerticalLayout {
 
         // Creamos las pestañas
         Tab tab1 = new Tab("Población Objetivo");
-        Tab tab2 = new Tab("Products");
+        Tab tab2 = new Tab("Productos");
         Tab tab3 = new Tab("Pedidos");
 
         // Creamos el contenedor de las pestañas
