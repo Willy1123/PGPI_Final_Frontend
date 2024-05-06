@@ -1,9 +1,9 @@
-package org.vaadin.example;
+package org.vaadin.example.controller;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
-import com.vaadin.pro.licensechecker.Product;
 import org.springframework.stereotype.Component;
+import org.vaadin.example.domain.Pedidos;
+import org.vaadin.example.domain.Products;
+import org.vaadin.example.domain.ndData;
 
 import java.net.URI;
 import java.net.URL;
@@ -16,6 +16,7 @@ import java.util.UUID;
 public class Api {
     private static final String URL = "http://localhost:8081/";
 
+    // Población
     public String getndData() throws Exception {
         // Se crea la URL de la API
         String urlCompleta = URL + "ndData";
@@ -29,9 +30,9 @@ public class Api {
 
     }
 
-    public String getProducts() throws Exception {
+    public String getndDataMsC() throws Exception {
         // Se crea la URL de la API
-        String urlCompleta = URL + "Products";
+        String urlCompleta = URL + "ndData/MsCode";
         java.net.URL url = new URL(urlCompleta);
         // Creamos un HTTPRequest con la URL
         HttpRequest request = HttpRequest.newBuilder().uri(new URI(urlCompleta)).GET().build();
@@ -40,6 +41,27 @@ public class Api {
 
         return response.body();
 
+    }
+
+    public String editndData(ndData ndData) throws Exception {
+        // Se crea la URL de la API
+        String urlCompleta = URL + "ndData/" + ndData.getID();
+
+        // Convertimos el objeto ndData a JSON
+        Gson gson = new Gson();
+        String json = gson.toJson(ndData);
+
+        // Creamos un HTTPRequest con la URL y el JSON
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(new URI(urlCompleta))
+                .PUT(HttpRequest.BodyPublishers.ofString(json))
+                .header("Content-Type", "application/json")
+                .build();
+
+        // Recibimos la respuesta de la API y la convertimos a String
+        HttpResponse<String> response = HttpClient.newBuilder().build().send(request, HttpResponse.BodyHandlers.ofString());
+
+        return response.body();
     }
 
     public String postndData(ndData ndData) throws Exception{
@@ -54,6 +76,54 @@ public class Api {
 
         // Creamos un HTTPRequest con la URL y el JSON
         HttpRequest request = HttpRequest.newBuilder().uri(new URI(urlCompleta)).POST(HttpRequest.BodyPublishers.ofString(json)).header("Content-Type", "application/json").build();
+        // Recibimos la respuesta de la API y la convertimos a String
+        HttpResponse<String> response = HttpClient.newBuilder().build().send(request, HttpResponse.BodyHandlers.ofString());
+
+        return response.body();
+    }
+
+    // Productos
+    public String getProducts() throws Exception {
+        // Se crea la URL de la API
+        String urlCompleta = URL + "Products";
+        java.net.URL url = new URL(urlCompleta);
+        // Creamos un HTTPRequest con la URL
+        HttpRequest request = HttpRequest.newBuilder().uri(new URI(urlCompleta)).GET().build();
+        // Recibimos la respuesta de la API y la convertimos a String
+        HttpResponse<String> response = HttpClient.newBuilder().build().send(request, HttpResponse.BodyHandlers.ofString());
+
+        return response.body();
+
+    }
+
+    public String getProductOrder() throws Exception {
+        // Se crea la URL de la API
+        String urlCompleta = URL + "Products/Name";
+        java.net.URL url = new URL(urlCompleta);
+        // Creamos un HTTPRequest con la URL
+        HttpRequest request = HttpRequest.newBuilder().uri(new URI(urlCompleta)).GET().build();
+        // Recibimos la respuesta de la API y la convertimos a String
+        HttpResponse<String> response = HttpClient.newBuilder().build().send(request, HttpResponse.BodyHandlers.ofString());
+
+        return response.body();
+
+    }
+
+    public String editProduct(Products product) throws Exception {
+        // Se crea la URL de la API
+        String urlCompleta = URL + "Products/" + product.getId();
+
+        // Convertimos el objeto ndData a JSON
+        Gson gson = new Gson();
+        String json = gson.toJson(product);
+
+        // Creamos un HTTPRequest con la URL y el JSON
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(new URI(urlCompleta))
+                .PUT(HttpRequest.BodyPublishers.ofString(json))
+                .header("Content-Type", "application/json")
+                .build();
+
         // Recibimos la respuesta de la API y la convertimos a String
         HttpResponse<String> response = HttpClient.newBuilder().build().send(request, HttpResponse.BodyHandlers.ofString());
 
@@ -78,74 +148,7 @@ public class Api {
         return response.body();
     }
 
-    public String editndData(ndData ndData) throws Exception {
-        // Se crea la URL de la API
-        String urlCompleta = URL + "ndData/" + ndData.getID();
-
-        // Convertimos el objeto ndData a JSON
-        Gson gson = new Gson();
-        String json = gson.toJson(ndData);
-
-        // Creamos un HTTPRequest con la URL y el JSON
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(new URI(urlCompleta))
-                .PUT(HttpRequest.BodyPublishers.ofString(json))
-                .header("Content-Type", "application/json")
-                .build();
-
-        // Recibimos la respuesta de la API y la convertimos a String
-        HttpResponse<String> response = HttpClient.newBuilder().build().send(request, HttpResponse.BodyHandlers.ofString());
-
-        return response.body();
-    }
-
-    public String editProduct(Products product) throws Exception {
-        // Se crea la URL de la API
-        String urlCompleta = URL + "Products/" + product.getId();
-
-        // Convertimos el objeto ndData a JSON
-        Gson gson = new Gson();
-        String json = gson.toJson(product);
-
-        // Creamos un HTTPRequest con la URL y el JSON
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(new URI(urlCompleta))
-                .PUT(HttpRequest.BodyPublishers.ofString(json))
-                .header("Content-Type", "application/json")
-                .build();
-
-        // Recibimos la respuesta de la API y la convertimos a String
-        HttpResponse<String> response = HttpClient.newBuilder().build().send(request, HttpResponse.BodyHandlers.ofString());
-
-        return response.body();
-    }
-
-    public String getndDataMsC() throws Exception {
-        // Se crea la URL de la API
-        String urlCompleta = URL + "ndData/MsCode";
-        java.net.URL url = new URL(urlCompleta);
-        // Creamos un HTTPRequest con la URL
-        HttpRequest request = HttpRequest.newBuilder().uri(new URI(urlCompleta)).GET().build();
-        // Recibimos la respuesta de la API y la convertimos a String
-        HttpResponse<String> response = HttpClient.newBuilder().build().send(request, HttpResponse.BodyHandlers.ofString());
-
-        return response.body();
-
-    }
-
-    public String getProductOrder() throws Exception {
-        // Se crea la URL de la API
-        String urlCompleta = URL + "Products/Name";
-        java.net.URL url = new URL(urlCompleta);
-        // Creamos un HTTPRequest con la URL
-        HttpRequest request = HttpRequest.newBuilder().uri(new URI(urlCompleta)).GET().build();
-        // Recibimos la respuesta de la API y la convertimos a String
-        HttpResponse<String> response = HttpClient.newBuilder().build().send(request, HttpResponse.BodyHandlers.ofString());
-
-        return response.body();
-
-    }
-
+    // Pedidos
     public String getPedidos() throws Exception {
         // Se crea la URL de la API
         String urlCompleta = URL + "Pedidos";
@@ -157,6 +160,58 @@ public class Api {
 
         return response.body();
 
+    }
+
+    public String getPedidosOrder() throws Exception {
+        // Se crea la URL de la API
+        String urlCompleta = URL + "Pedidos/New";
+        java.net.URL url = new URL(urlCompleta);
+        // Creamos un HTTPRequest con la URL
+        HttpRequest request = HttpRequest.newBuilder().uri(new URI(urlCompleta)).GET().build();
+        // Recibimos la respuesta de la API y la convertimos a String
+        HttpResponse<String> response = HttpClient.newBuilder().build().send(request, HttpResponse.BodyHandlers.ofString());
+
+        return response.body();
+
+    }
+
+    public String postPedido(Pedidos pedidos) throws Exception{
+        // Se crea la URL de la API
+        String urlCompleta = URL + "Pedidos";
+
+        // Convertimos el objeto ndData a JSON
+        Gson gson = new Gson();
+        UUID id = UUID.randomUUID();
+        pedidos.setId(id.toString());
+        String json = gson.toJson(pedidos);
+
+        // Creamos un HTTPRequest con la URL y el JSON
+        HttpRequest request = HttpRequest.newBuilder().uri(new URI(urlCompleta)).POST(HttpRequest.BodyPublishers.ofString(json)).header("Content-Type", "application/json").build();
+        // Recibimos la respuesta de la API y la convertimos a String
+        HttpResponse<String> response = HttpClient.newBuilder().build().send(request, HttpResponse.BodyHandlers.ofString());
+
+        return response.body();
+    }
+
+    public String editPedido(Pedidos pedidos) throws Exception {
+        // Se crea la URL de la API
+        String urlCompleta = URL + "Pedido/" + pedidos.getId();
+
+        // Convertimos el objeto ndData a JSON
+        Gson gson = new Gson();
+        String json = gson.toJson(pedidos);
+
+        // Creamos un HTTPRequest con la URL y el JSON
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(new URI(urlCompleta))
+                .PUT(HttpRequest.BodyPublishers.ofString(json))
+                .header("Content-Type", "application/json")
+                .build();
+
+        // Recibimos la respuesta de la API y la convertimos a String
+        HttpResponse<String> response = HttpClient.newBuilder().build().send(request, HttpResponse.BodyHandlers.ofString());
+
+        return response.body();
     }
 
 }

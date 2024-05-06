@@ -1,8 +1,6 @@
-package org.vaadin.example;
+package org.vaadin.example.domain;
 
 import com.google.gson.annotations.SerializedName;
-
-import java.util.*;
 
 public class ndData {
     //Creamos los atributos de la clase ndData
