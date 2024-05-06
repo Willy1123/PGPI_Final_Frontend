@@ -46,6 +46,12 @@ public class GreetService implements Serializable {
         return respuesta;
     }
 
+    //méttodo editProduct que recibe un objeto de tipo ndData y lo envía a la API para su edición
+    public String editPedido(Pedidos pedidos) throws Exception {
+        String respuesta = api.editPedido(pedidos);
+        return respuesta;
+    }
+
     //método postData que recibe un objeto de tipo ndData y lo envía a la API para su creación
     public String postData(ndData ndData) throws Exception {
         String respuesta = api.postndData(ndData);

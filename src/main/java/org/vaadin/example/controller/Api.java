@@ -193,4 +193,25 @@ public class Api {
         return response.body();
     }
 
+    public String editPedido(Pedidos pedidos) throws Exception {
+        // Se crea la URL de la API
+        String urlCompleta = URL + "Pedido/" + pedidos.getId();
+
+        // Convertimos el objeto ndData a JSON
+        Gson gson = new Gson();
+        String json = gson.toJson(pedidos);
+
+        // Creamos un HTTPRequest con la URL y el JSON
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(new URI(urlCompleta))
+                .PUT(HttpRequest.BodyPublishers.ofString(json))
+                .header("Content-Type", "application/json")
+                .build();
+
+        // Recibimos la respuesta de la API y la convertimos a String
+        HttpResponse<String> response = HttpClient.newBuilder().build().send(request, HttpResponse.BodyHandlers.ofString());
+
+        return response.body();
+    }
+
 }

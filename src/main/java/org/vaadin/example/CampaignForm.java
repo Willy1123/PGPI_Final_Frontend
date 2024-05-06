@@ -7,7 +7,7 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.notification.Notification;
 import org.vaadin.example.controller.GreetService;
 import org.vaadin.example.domain.Pedidos;
-import org.vaadin.example.domain.Picking;
+import org.vaadin.example.domain.Tuple;
 import org.vaadin.example.domain.Products;
 import org.vaadin.example.domain.ndData;
 
@@ -24,7 +24,7 @@ public class CampaignForm extends HorizontalLayout {
     private TextField postal;
     private TextField zone;
     private TextField quantityField;
-    private List<Picking> pickingList;
+    private List<Tuple> tupleList;
     private Button addPickingButton;
     private Button saveButton;
 
@@ -65,7 +65,7 @@ public class CampaignForm extends HorizontalLayout {
         quantityField = new TextField("Quantity");
 
         // Lista temporal para almacenar elementos de Picking
-        pickingList = new ArrayList<>();
+        tupleList = new ArrayList<>();
 
         // Botón para añadir elementos a la lista temporal de Picking
         addPickingButton = new Button("Add Picking");
@@ -74,12 +74,12 @@ public class CampaignForm extends HorizontalLayout {
             if (!selectedProductName.isEmpty()) {
                 try {
                     int quantity = Integer.parseInt(quantityField.getValue()); // Verificar la conversión
-                    Picking picking = new Picking();
+                    Tuple tuple = new Tuple();
                     Products selectedProduct = new Products(); // No es necesario crear un producto nuevo
                     //selectedProduct.setName(selectedProductName);
-                    picking.setProductName(selectedProductName);
-                    picking.setQuantity(quantity);
-                    pickingList.add(picking); // Añadir a la lista
+                    tuple.setProductName(selectedProductName);
+                    tuple.setQuantity(quantity);
+                    tupleList.add(tuple); // Añadir a la lista
                     Notification.show("Picking item added");
                 } catch (NumberFormatException e) {
                     Notification.show("Invalid quantity. Please enter a number.");
@@ -95,20 +95,25 @@ public class CampaignForm extends HorizontalLayout {
             Pedidos newPedido = new Pedidos();
             newPedido.setId(UUID.randomUUID().toString());
             newPedido.setNameCampaign(campaignNameComboBox.getValue());
-            newPedido.setItems(pickingList);
+            newPedido.setItems(tupleList);
             newPedido.setDir(address.getValue());
             newPedido.setPostal(postal.getValue());
             newPedido.setZone(zone.getValue());
             newPedido.setAgency(agency.getValue());
             newPedido.setState("pendiente");
+            try {
+                greetService.postPedido(newPedido);
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
 
         });
 
         add(campaignNameComboBox, productComboBox, quantityField, address, postal, zone, agency, addPickingButton, saveButton);
     }
 
-    public List<Picking> getPickingList() {
-        return pickingList;
+    public List<Tuple> getPickingList() {
+        return tupleList;
     }
 
     public ComboBox<String> getCampaignNameComboBox() {

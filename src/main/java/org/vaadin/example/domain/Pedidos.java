@@ -7,7 +7,7 @@ public class Pedidos {
     private String id;
     private String nameCampaign;
     private String dir;
-    private List<Picking> items;
+    private List<Tuple> items;
     private String postal;
     private String zone;
     private String agency;
@@ -41,11 +41,11 @@ public class Pedidos {
         this.dir = dir;
     }
 
-    public List<Picking> getItems() {
+    public List<Tuple> getItems() {
         return items;
     }
 
-    public void setItems(List<Picking> items) {
+    public void setItems(List<Tuple> items) {
         this.items = items;
     }
 

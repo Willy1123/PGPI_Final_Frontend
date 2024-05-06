@@ -1,14 +1,14 @@
 package org.vaadin.example.domain;
 
-public class Picking {
+public class Tuple {
 
     private String productName;
     private int quantity;
 
-    public Picking() {
+    public Tuple() {
     }
 
-    public Picking(String productName, int quantity) {
+    public Tuple(String productName, int quantity) {
         this.productName = productName;
         this.quantity = quantity;
     }
