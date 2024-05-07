@@ -3,6 +3,7 @@ package org.vaadin.example;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.notification.Notification;
 import org.vaadin.example.controller.GreetService;
@@ -16,10 +17,11 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class CampaignForm extends HorizontalLayout {
+public class CampaignForm extends VerticalLayout {
     private ComboBox<String> campaignNameComboBox;
     private ComboBox<String> productComboBox;
     private ComboBox<String> agency;
+    private ComboBox<String> urgency;
     private TextField address;
     private TextField postal;
     private TextField zone;
@@ -50,8 +52,11 @@ public class CampaignForm extends HorizontalLayout {
 
         String[] opciones = {"DHL", "UPS", "FedEx"};
         agency = new ComboBox<>("Agency");
-
         agency.setItems(opciones);
+
+        String[] urgencia = {"True", "False"};
+        urgency = new ComboBox<>("Urgency");
+        urgency.setItems(urgencia);
 
         List<String> uniqueProductos = greetService.GetProductOrder().stream()
                 .map(Products::getName)
@@ -100,6 +105,7 @@ public class CampaignForm extends HorizontalLayout {
             newPedido.setPostal(postal.getValue());
             newPedido.setZone(zone.getValue());
             newPedido.setAgency(agency.getValue());
+            newPedido.setType(urgency.getValue());
             newPedido.setState("pendiente");
             try {
                 greetService.postPedido(newPedido);
@@ -109,7 +115,15 @@ public class CampaignForm extends HorizontalLayout {
 
         });
 
-        add(campaignNameComboBox, productComboBox, quantityField, address, postal, zone, agency, addPickingButton, saveButton);
+        VerticalLayout vPedido = new VerticalLayout();
+        HorizontalLayout hAddPedido = new HorizontalLayout();
+        HorizontalLayout hLayoutPickList = new HorizontalLayout();
+        HorizontalLayout hLayaoutSaveBtn = new HorizontalLayout();
+        hAddPedido.add(campaignNameComboBox, address, postal, zone, agency, urgency);
+        hLayoutPickList.add(productComboBox, quantityField);
+        hLayaoutSaveBtn.add(addPickingButton, saveButton);
+        add(hAddPedido, hLayoutPickList, hLayaoutSaveBtn);
+        //add(vPedido);
     }
 
     public List<Tuple> getPickingList() {

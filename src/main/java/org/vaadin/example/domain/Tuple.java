@@ -1,8 +1,12 @@
 package org.vaadin.example.domain;
 
+import com.google.gson.annotations.SerializedName;
+
 public class Tuple {
 
+    @SerializedName("productName")
     private String productName;
+    @SerializedName("quantity")
     private int quantity;
 
     public Tuple() {

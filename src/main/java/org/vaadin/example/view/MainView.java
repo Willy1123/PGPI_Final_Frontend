@@ -67,6 +67,7 @@ public class MainView extends VerticalLayout {
     private final Button filterButtonPoblation = new Button("Filtrar");
     private final Button filterButtonProduct = new Button("Filtrar");
     private final Button btn_AddPedido = new Button("New");
+    private Button cancelNewPedido = new Button("Cancel");
 
     // Comboboxes
     private final ComboBox<String> filterComboBox = new ComboBox<>();
@@ -552,7 +553,7 @@ public class MainView extends VerticalLayout {
         pedidosEditor.setBuffered(true);
 
         Grid.Column<Pedidos> IdPedido = gridPedCV.addColumn(Pedidos::getId).setHeader("ID").setAutoWidth(true);
-        Grid.Column<Pedidos> nameCampaign = gridPedCV.addColumn(Pedidos::getNameCampaign).setHeader("Campaign Name");
+        Grid.Column<Pedidos> nameCampaign = gridPedCV.addColumn(Pedidos::getNameCampaign).setHeader("Campaign Name").setAutoWidth(true);
         gridPedCV.addColumn(new ComponentRenderer<>(pedidos -> {
             HorizontalLayout layout = new HorizontalLayout();
             layout.getStyle().set("white-space", "normal"); // Permitir word-wrap
@@ -569,9 +570,10 @@ public class MainView extends VerticalLayout {
         })).setHeader("Pick List").setAutoWidth(true);
         Grid.Column<Pedidos> address = gridPedCV.addColumn(Pedidos::getDir).setHeader("Address").setAutoWidth(true);
         Grid.Column<Pedidos> postal = gridPedCV.addColumn(Pedidos::getPostal).setHeader("Postal");
-        Grid.Column<Pedidos> units = gridPedCV.addColumn(Pedidos::getZone).setHeader("Zone");
+        Grid.Column<Pedidos> units = gridPedCV.addColumn(Pedidos::getZone).setHeader("Zone").setAutoWidth(true);
         Grid.Column<Pedidos> proveedor = gridPedCV.addColumn(Pedidos::getAgency).setHeader("Agency");
-        Grid.Column<Pedidos> state = gridPedCV.addColumn(Pedidos::getState).setHeader("State");
+        Grid.Column<Pedidos> type = gridPedCV.addColumn(Pedidos::getType).setHeader("Urgent");
+        Grid.Column<Pedidos> state = gridPedCV.addColumn(Pedidos::getState).setHeader("State").setAutoWidth(true);
 
 
         // Añadir los objetos desde la API al grid
@@ -609,7 +611,7 @@ public class MainView extends VerticalLayout {
         });
 
         // Botón para cancelar la operación
-        Button cancelNewPedido = new Button("Cancelar", e2 -> {
+        cancelNewPedido = new Button("Cancelar", e2 -> {
             tab3Reload.removeAll();
             tab3Content.removeAll();
             try {
@@ -620,8 +622,8 @@ public class MainView extends VerticalLayout {
                 throw new RuntimeException(e);
             }
         });
-        LFormAniadir.add(campaignForm, cancelNewPedido);
-        layoutarriba.add(LFormAniadir);
+        layoutarriba.add(campaignForm);
+        //layoutarriba.add(LFormAniadir);
 
         return layoutarriba;
     }
@@ -639,9 +641,9 @@ public class MainView extends VerticalLayout {
     public MainView(@Autowired GreetService service) throws Exception {
 
         // Creamos las pestañas
-        Tab tab1 = new Tab("Población Objetivo");
-        Tab tab2 = new Tab("Productos");
-        Tab tab3 = new Tab("Pedidos");
+        Tab tab1 = new Tab("Target Population");
+        Tab tab2 = new Tab("Products");
+        Tab tab3 = new Tab("Order");
 
         // Creamos el contenedor de las pestañas
         Tabs tabs = new Tabs(tab1, tab2, tab3);
@@ -656,7 +658,8 @@ public class MainView extends VerticalLayout {
             try {
                 tab3Reload.removeAll();
                 tab3Content.removeAll();
-                tab3Content.add(btn_ReloadPedidoCl, btnAddPedido(service), PedidosCVA(service));
+                tab3Reload.add(btn_ReloadPedidoCl, cancelNewPedido);
+                tab3Content.add(tab3Reload, btnAddPedido(service), PedidosCVA(service));
 
             } catch (Exception ex) {
                 throw new RuntimeException(ex);

@@ -55,6 +55,7 @@ public class UserView extends VerticalLayout {
     private final Button filterButtonPoblation = new Button("Filtrar");
     private final Button filterButtonProduct = new Button("Filtrar");
     private final Button btn_AddPedido = new Button("New");
+    private Button cancelNewPedidoU = new Button("Cancel");
 
     // Comboboxes
     private final ComboBox<String> filterComboBox = new ComboBox<>();
@@ -124,7 +125,7 @@ public class UserView extends VerticalLayout {
         // Creamos un Grid para mostrar los datos
         Grid<Products> gridprCV = new Grid<>(Products.class, false);
         Grid.Column<Products> IDMscColumn = gridprCV.addColumn(Products::getId).setHeader("ID").setAutoWidth(true);
-        Grid.Column<Products> msCodeMscColumn = gridprCV.addColumn(Products::getName).setHeader("Name");
+        Grid.Column<Products> msCodeMscColumn = gridprCV.addColumn(Products::getName).setHeader("Name").setAutoWidth(true);
         // Columna para Address con ComponentRenderer para word-wrap
         Grid.Column<Products> yearColumn = gridprCV.addColumn(new ComponentRenderer<>(products -> {
             HorizontalLayout layout = new HorizontalLayout();
@@ -185,7 +186,7 @@ public class UserView extends VerticalLayout {
         // Creamos un Grid para mostrar los datos
         Grid<Pedidos> gridPedCV = new Grid<>(Pedidos.class, false);
         Grid.Column<Pedidos> IdPedido = gridPedCV.addColumn(Pedidos::getId).setHeader("ID").setAutoWidth(true);
-        Grid.Column<Pedidos> nameCampaign = gridPedCV.addColumn(Pedidos::getNameCampaign).setHeader("Campaign Name");
+        Grid.Column<Pedidos> nameCampaign = gridPedCV.addColumn(Pedidos::getNameCampaign).setHeader("Campaign Name").setAutoWidth(true);
         // Columna para Pick List usando ComponentRenderer con word-wrap
         gridPedCV.addColumn(new ComponentRenderer<>(pedidos -> {
             HorizontalLayout layout = new HorizontalLayout();
@@ -204,9 +205,9 @@ public class UserView extends VerticalLayout {
         })).setHeader("Pick List").setAutoWidth(true); // Permitir ajuste del ancho
         Grid.Column<Pedidos> address = gridPedCV.addColumn(Pedidos::getDir).setHeader("Address").setAutoWidth(true);
         Grid.Column<Pedidos> postal = gridPedCV.addColumn(Pedidos::getPostal).setHeader("Postal");
-        Grid.Column<Pedidos> units = gridPedCV.addColumn(Pedidos::getZone).setHeader("Zone");
+        Grid.Column<Pedidos> units = gridPedCV.addColumn(Pedidos::getZone).setHeader("Zone").setAutoWidth(true);
         Grid.Column<Pedidos> proveedor = gridPedCV.addColumn(Pedidos::getAgency).setHeader("Agency");
-        Grid.Column<Pedidos> state = gridPedCV.addColumn(Pedidos::getState).setHeader("State");
+        Grid.Column<Pedidos> state = gridPedCV.addColumn(Pedidos::getState).setHeader("State").setAutoWidth(true);
 
 
         // Añadir los objetos desde la API al grid
@@ -256,8 +257,8 @@ public class UserView extends VerticalLayout {
                 throw new RuntimeException(e);
             }
         });
-        LFormAniadir.add(campaignForm, cancelNewPedido);
-        layoutarriba.add(LFormAniadir);
+        layoutarriba.add(campaignForm);
+        //layoutarriba.add(LFormAniadir);
 
         return layoutarriba;
     }
@@ -274,9 +275,9 @@ public class UserView extends VerticalLayout {
     public UserView(@Autowired GreetService service) throws Exception {
 
         // Creamos las pestañas
-        Tab tab1 = new Tab("Población Objetivo");
-        Tab tab2 = new Tab("Productos");
-        Tab tab3 = new Tab("Pedidos");
+        Tab tab1 = new Tab("Target Population");
+        Tab tab2 = new Tab("Products");
+        Tab tab3 = new Tab("Order");
 
         // Creamos el contenedor de las pestañas
         Tabs tabs = new Tabs(tab1, tab2, tab3);
@@ -291,7 +292,8 @@ public class UserView extends VerticalLayout {
             try {
                 tab3Reload.removeAll();
                 tab3Content.removeAll();
-                tab3Content.add(btn_ReloadPedidoCl, btnAddPedido(service), PedidosCV(service));
+                tab3Reload.add(btn_ReloadPedidoCl, cancelNewPedidoU);
+                tab3Content.add(tab3Reload, btnAddPedido(service), PedidosCV(service));
 
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
